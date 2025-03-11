@@ -33,8 +33,8 @@ class AnalogClock:
     def draw_clock_face(self):
         for i in range(12):
             angle = math.radians(i * 30)
-            x = self.center_x + self.radius * 0.85 * math.sin(angle)
-            y = self.center_y - self.radius * 0.85 * math.cos(angle)
+            x = self.center_x + self.radius * 0.78 * math.sin(angle)  # Adjusted from 0.85 to 0.80
+            y = self.center_y - self.radius * 0.78 * math.cos(angle)  # Adjusted from 0.85 to 0.80
             self.canvas.create_text(x, y, text=str(i if i != 0 else 12), font=("Arial", 12, "bold"))
         for i in range(60):
             angle = math.radians(i * 6)
