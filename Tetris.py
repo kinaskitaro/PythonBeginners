@@ -38,6 +38,7 @@ current_x = BOARD_WIDTH // 2 - len(current_shape[0]) // 2
 current_y = 0
 score = 0
 high_score = 0
+speed_level = 1
 
 def draw_shape():
     canvas.delete("all")
@@ -76,13 +77,14 @@ def draw_board():
 def draw_score():
     canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 10, text=f"Score: {score}", fill="white", font=("Helvetica", 16))
     canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 30, text=f"High Score: {high_score}", fill="white", font=("Helvetica", 16))
+    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 50, text=f"Speed Level: {speed_level}", fill="white", font=("Helvetica", 16))
 
 def auto_drop():
     move_shape(0, 1)
-    root.after(500, auto_drop)
+    root.after(500 // speed_level, auto_drop)
 
 def move_shape(dx, dy):
-    global current_x, current_y, current_shape, board, score
+    global current_x, current_y, current_shape, board, score, speed_level
     new_x = current_x + dx
     new_y = current_y + dy
     if not check_collision(new_x, new_y, current_shape):
@@ -93,6 +95,7 @@ def move_shape(dx, dy):
             place_shape()
             lines_cleared = clear_lines()
             score += lines_cleared * 1
+            speed_level = score // 30 + 1
             current_shape = random.choice(SHAPES)
             current_x = BOARD_WIDTH // 2 - len(current_shape[0]) // 2
             current_y = 0
@@ -117,12 +120,13 @@ def clear_lines():
     return lines_cleared
 
 def game_over():
-    global high_score
+    global high_score, score, speed_level
     if score > high_score:
         high_score = score
     canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2, text="Game Over", fill="red", font=("Helvetica", 24))
     root.update()
     root.after(2000, root.destroy)
+    speed_level = 1
 
 def check_collision(x, y, shape):
     for row_index, row in enumerate(shape):
