@@ -39,6 +39,7 @@ current_y = 0
 score = 0
 high_score = 0
 speed_level = 1
+game_over_flag = False
 
 def draw_shape():
     canvas.delete("all")
@@ -75,16 +76,19 @@ def draw_board():
                 )
 
 def draw_score():
-    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 10, text=f"Score: {score}", fill="white", font=("Helvetica", 16))
-    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 30, text=f"High Score: {high_score}", fill="white", font=("Helvetica", 16))
-    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 50, text=f"Speed Level: {speed_level}", fill="white", font=("Helvetica", 16))
+    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 10, text=f"Score: {score}", fill="yellow", font=("Helvetica", 16, "bold"))
+    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 30, text=f"High Score: {high_score}", fill="yellow", font=("Helvetica", 16, "bold"))
+    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 50, text=f"Speed Level: {speed_level}", fill="yellow", font=("Helvetica", 16, "bold"))
 
 def auto_drop():
-    move_shape(0, 1)
-    root.after(500 // speed_level, auto_drop)
+    if not game_over_flag:
+        move_shape(0, 1)
+        root.after(750 // speed_level, auto_drop)
 
 def move_shape(dx, dy):
     global current_x, current_y, current_shape, board, score, speed_level
+    if game_over_flag:
+        return
     new_x = current_x + dx
     new_y = current_y + dy
     if not check_collision(new_x, new_y, current_shape):
@@ -101,15 +105,17 @@ def move_shape(dx, dy):
             current_y = 0
             if check_collision(current_x, current_y, current_shape):
                 game_over()
-    canvas.delete("all")
-    draw_shape()
+    if not game_over_flag:
+        canvas.delete("all")
+        draw_shape()
 
 def place_shape():
     global board, current_shape, current_x, current_y
     for y, row in enumerate(current_shape):
         for x, cell in enumerate(row):
             if cell:
-                board[current_y + y][current_x + x] = cell
+                if 0 <= current_y + y < BOARD_HEIGHT and 0 <= current_x + x < BOARD_WIDTH:
+                    board[current_y + y][current_x + x] = cell
 
 def clear_lines():
     global board
@@ -120,13 +126,37 @@ def clear_lines():
     return lines_cleared
 
 def game_over():
-    global high_score, score, speed_level
+    global high_score, score, speed_level, game_over_flag
+    game_over_flag = True
     if score > high_score:
         high_score = score
-    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2, text="Game Over", fill="red", font=("Helvetica", 24))
+    canvas.delete("all")
+    draw_grid()
+    draw_border()
+    draw_board()
+    draw_score()
+    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2, text="Game Over", fill="red", font=("Helvetica", 24, "bold"))
+    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2 + 30, text="Press Space to Replay", fill="white", font=("Helvetica", 16, "bold"))
     root.update()
-    root.after(2000, root.destroy)
+    root.bind("<Key>", on_key_press_game_over)
+
+def on_key_press_game_over(event):
+    if event.keysym == "space":
+        reset_game()
+
+def reset_game():
+    global board, current_shape, current_x, current_y, score, speed_level, game_over_flag
+    canvas.delete("all")
+    board = [[0] * BOARD_WIDTH for _ in range(BOARD_HEIGHT)]
+    current_shape = random.choice(SHAPES)
+    current_x = BOARD_WIDTH // 2 - len(current_shape[0]) // 2
+    current_y = 0
+    score = 0
     speed_level = 1
+    game_over_flag = False
+    root.bind("<Key>", on_key_press)
+    draw_shape()
+    auto_drop()
 
 def check_collision(x, y, shape):
     for row_index, row in enumerate(shape):
@@ -134,13 +164,15 @@ def check_collision(x, y, shape):
             if cell:
                 if (x + col_index < 0 or x + col_index >= BOARD_WIDTH or
                         y + row_index >= BOARD_HEIGHT or
-                        board[y + row_index][x + col_index]):
+                        (y + row_index >= 0 and board[y + row_index][x + col_index])):
                     return True
     return False
 
 def rotate_shape():
-    global current_shape
-    current_shape = [list(row) for row in zip(*current_shape[::-1])]
+    global current_shape, current_x
+    rotated_shape = [list(row) for row in zip(*current_shape[::-1])]
+    if not check_collision(current_x, current_y, rotated_shape):
+        current_shape = rotated_shape
     canvas.delete("all")
     draw_shape()
 
