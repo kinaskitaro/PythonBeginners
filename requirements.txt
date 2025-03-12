@@ -3,3 +3,8 @@ pandas
 requests
 flask
 matplotlib
+scikit-learn
+pytest
+python-dotenv
+pillow
+sqlalchemy

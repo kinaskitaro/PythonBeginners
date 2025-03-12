@@ -1,13 +1,10 @@
-from typing import Dict, Union
-import sys
+from typing import Dict
 import requests
-import json
 from datetime import datetime, timedelta
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import threading
-from tkinter import font
 
 # Cache for currency rates
 CURRENCY_CACHE = {
