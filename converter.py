@@ -112,14 +112,25 @@ class ConverterGUI:
                        background=self.colors['bg'],
                        foreground=self.colors['success'],
                        font=('Helvetica', 12, 'bold'))
+        
+        # Update button styles with hover mapping
         style.configure('Main.TButton',
                        background=self.colors['button'],
                        foreground=self.colors['fg'],
                        padding=10,
                        font=('Helvetica', 10, 'bold'))
-        style.configure('Main.TEntry',
-                       fieldbackground=self.colors['fg'],
-                       foreground=self.colors['bg'])
+        style.map('Main.TButton',
+                 background=[('active', self.colors['button_hover'])],
+                 foreground=[('active', self.colors['fg'])])
+        
+        style.configure('Swap.TButton',
+                       background=self.colors['button'],
+                       foreground=self.colors['fg'],
+                       padding=5,
+                       font=('Arial', 14, 'bold'))
+        style.map('Swap.TButton',
+                 background=[('active', self.colors['button_hover'])],
+                 foreground=[('active', self.colors['fg'])])
         
         # Configure notebook style
         style.configure('Main.TNotebook',
@@ -182,6 +193,13 @@ class ConverterGUI:
         self.from_currency = ttk.Combobox(from_frame, width=10, style='Main.TCombobox')
         self.from_currency.pack()
         
+        # Swap button
+        swap_frame = ttk.Frame(selections_frame, style='Tab.TFrame')
+        swap_frame.pack(side=tk.LEFT, padx=5)
+        ttk.Button(swap_frame, text="⇋", width=3, 
+                  command=self.swap_currencies, 
+                  style='Swap.TButton').pack(pady=22)
+        
         # To currency
         to_frame = ttk.Frame(selections_frame, style='Tab.TFrame')
         to_frame.pack(side=tk.LEFT, padx=10)
@@ -221,6 +239,11 @@ class ConverterGUI:
         self.from_unit = ttk.Combobox(units_frame, values=['Celsius', 'Fahrenheit', 'Kelvin'], width=10, style='Main.TCombobox')
         self.from_unit.set('Celsius')
         self.from_unit.pack(side=tk.LEFT, padx=10)
+        
+        # Swap button
+        ttk.Button(units_frame, text="⇋", width=3, 
+                  command=self.swap_temperatures, 
+                  style='Swap.TButton').pack(side=tk.LEFT, padx=5)
         
         # To unit
         self.to_unit = ttk.Combobox(units_frame, values=['Celsius', 'Fahrenheit', 'Kelvin'], width=10, style='Main.TCombobox')
@@ -272,9 +295,21 @@ class ConverterGUI:
             self.temp_result.config(foreground=self.colors['error'])
             messagebox.showerror("Error", str(e))
 
+    def swap_currencies(self):
+        from_curr = self.from_currency.get()
+        to_curr = self.to_currency.get()
+        self.from_currency.set(to_curr)
+        self.to_currency.set(from_curr)
+
+    def swap_temperatures(self):
+        from_unit = self.from_unit.get()
+        to_unit = self.to_unit.get()
+        self.from_unit.set(to_unit)
+        self.to_unit.set(from_unit)
+
 def main():
     root = tk.Tk()
-    app = ConverterGUI(root)
+    ConverterGUI(root)
     root.mainloop()
 
 if __name__ == "__main__":
