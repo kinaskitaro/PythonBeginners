@@ -17,7 +17,5 @@ if __name__ == "__main__":
         print(f"{idx + 1}. {filename}")
     
     choice = int(input("Enter the number of the file to execute: ")) - 1
-    if 0 <= choice < len(python_files):
-        execute_python_file(os.path.join(directory, python_files[choice]))
-    else:
-        print("Invalid choice.")
+    execute_python_file(os.path.join(directory, python_files[choice]))
+    print("Invalid choice.")

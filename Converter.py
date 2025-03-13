@@ -78,6 +78,39 @@ def convert_temperature(value: float, from_unit: str, to_unit: str) -> float:
     else:
         raise ValueError("Unsupported temperature unit")
 
+def convert_weight(value: float, from_unit: str, to_unit: str) -> float:
+    """Convert between kilograms, pounds, ounces, grams, and stones"""
+    from_unit = from_unit.lower()
+    to_unit = to_unit.lower()
+    
+    # Convert to kilograms first
+    if from_unit in ['kg', 'kilograms']:
+        kg = value
+    elif from_unit in ['lb', 'pounds']:
+        kg = value * 0.453592
+    elif from_unit in ['oz', 'ounces']:
+        kg = value * 0.0283495
+    elif from_unit in ['g', 'grams']:
+        kg = value / 1000
+    elif from_unit in ['st', 'stones']:
+        kg = value * 6.35029
+    else:
+        raise ValueError("Unsupported weight unit")
+    
+    # Convert from kilograms to target unit
+    if to_unit in ['kg', 'kilograms']:
+        return kg
+    elif to_unit in ['lb', 'pounds']:
+        return kg / 0.453592
+    elif to_unit in ['oz', 'ounces']:
+        return kg / 0.0283495
+    elif to_unit in ['g', 'grams']:
+        return kg * 1000
+    elif to_unit in ['st', 'stones']:
+        return kg / 6.35029
+    else:
+        raise ValueError("Unsupported weight unit")
+
 class ConverterGUI:
     def __init__(self, root):
         self.root = root
@@ -150,14 +183,17 @@ class ConverterGUI:
         # Create frames for tabs
         self.currency_frame = ttk.Frame(self.notebook, style='Tab.TFrame')
         self.temp_frame = ttk.Frame(self.notebook, style='Tab.TFrame')
+        self.weight_frame = ttk.Frame(self.notebook, style='Tab.TFrame')
         
         # Add frames to notebook
         self.notebook.add(self.currency_frame, text="Currency Converter")
         self.notebook.add(self.temp_frame, text="Temperature Converter")
+        self.notebook.add(self.weight_frame, text="Weight Converter")
         
         # Setup tabs
         self.setup_currency_tab()
         self.setup_temperature_tab()
+        self.setup_weight_tab()
         
         # Status bar
         self.status_var = tk.StringVar()
@@ -259,6 +295,49 @@ class ConverterGUI:
                                     font=('Helvetica', 14, 'bold'))
         self.temp_result.pack(pady=10)
 
+    def setup_weight_tab(self):
+        # Title label
+        title_label = ttk.Label(self.weight_frame, 
+                               text="Weight Converter",
+                               style='Main.TLabel',
+                               font=('Helvetica', 16, 'bold'))
+        title_label.pack(pady=20)
+        
+        # Weight entry with custom style
+        weight_frame = ttk.Frame(self.weight_frame, style='Tab.TFrame')
+        weight_frame.pack(pady=20)
+        ttk.Label(weight_frame, text="Weight:", style='Main.TLabel').pack(side=tk.LEFT)
+        self.weight_entry = ttk.Entry(weight_frame, width=20, style='Main.TEntry')
+        self.weight_entry.pack(side=tk.LEFT, padx=10)
+        
+        # Unit selection
+        units_frame = ttk.Frame(self.weight_frame, style='Tab.TFrame')
+        units_frame.pack(pady=10)
+        
+        # From unit
+        self.from_weight_unit = ttk.Combobox(units_frame, values=['Kilograms', 'Pounds', 'Ounces', 'Grams', 'Stones'], width=10, style='Main.TCombobox')
+        self.from_weight_unit.set('Kilograms')
+        self.from_weight_unit.pack(side=tk.LEFT, padx=10)
+        
+        # Swap button
+        ttk.Button(units_frame, text="⇋", width=3, 
+                  command=self.swap_weights, 
+                  style='Swap.TButton').pack(side=tk.LEFT, padx=5)
+        
+        # To unit
+        self.to_weight_unit = ttk.Combobox(units_frame, values=['Kilograms', 'Pounds', 'Ounces', 'Grams', 'Stones'], width=10, style='Main.TCombobox')
+        self.to_weight_unit.set('Pounds')
+        self.to_weight_unit.pack(side=tk.LEFT, padx=10)
+        
+        # Convert button
+        ttk.Button(self.weight_frame, text="Convert", command=self.convert_weight_gui, style='Main.TButton').pack(pady=20)
+        
+        # Result label with custom style
+        self.weight_result = ttk.Label(self.weight_frame, 
+                                    style='Result.TLabel',
+                                    font=('Helvetica', 14, 'bold'))
+        self.weight_result.pack(pady=10)
+
     def update_rates(self):
         def fetch():
             try:
@@ -295,6 +374,19 @@ class ConverterGUI:
             self.temp_result.config(foreground=self.colors['error'])
             messagebox.showerror("Error", str(e))
 
+    def convert_weight_gui(self):
+        try:
+            value = float(self.weight_entry.get())
+            from_unit = self.from_weight_unit.get().lower()
+            to_unit = self.to_weight_unit.get().lower()
+            print(f"Converting {value} from {from_unit} to {to_unit}")  # Debug print
+            result = convert_weight(value, from_unit, to_unit)
+            self.weight_result.config(text=f"{value} {self.from_weight_unit.get()} = {result:.2f} {self.to_weight_unit.get()}", foreground=self.colors['success'])
+        except Exception as e:
+            print(f"Error: {e}")  # Debug print
+            self.weight_result.config(foreground=self.colors['error'])
+            messagebox.showerror("Error", str(e))
+
     def swap_currencies(self):
         from_curr = self.from_currency.get()
         to_curr = self.to_currency.get()
@@ -306,6 +398,12 @@ class ConverterGUI:
         to_unit = self.to_unit.get()
         self.from_unit.set(to_unit)
         self.to_unit.set(from_unit)
+
+    def swap_weights(self):
+        from_unit = self.from_weight_unit.get()
+        to_unit = self.to_weight_unit.get()
+        self.from_weight_unit.set(to_unit)
+        self.to_weight_unit.set(from_unit)
 
 def main():
     root = tk.Tk()
