@@ -111,7 +111,7 @@ def draw_score():
 def auto_drop():
     if not game_over_flag and not paused:
         move_shape(0, 1)
-    root.after(900 // speed_level, auto_drop)
+    root.after(1000 // speed_level, auto_drop)
 
 def move_shape(dx, dy):
     global current_x, current_y, current_shape, board, score, speed_level
