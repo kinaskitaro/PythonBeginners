@@ -113,7 +113,7 @@ def auto_drop():
         move_shape(0, 1)
     root.after(1000 // speed_level, auto_drop)
 
-def move_shape(dx, dy):
+def move_shape(dx, dy, manual=False):
     global current_x, current_y, current_shape, board, score, speed_level
     if game_over_flag:
         return
@@ -123,7 +123,7 @@ def move_shape(dx, dy):
         current_x = new_x
         current_y = new_y
     else:
-        if dy > 0:  # If the collision is due to downward movement
+        if dy > 0 and not manual:  # If the collision is due to downward movement and not manual
             place_shape()
             lines_cleared = clear_lines()
             score += lines_cleared * 1
@@ -219,7 +219,7 @@ def on_key_press(event):
         elif event.keysym == "Right":
             move_shape(1, 0)
         elif event.keysym == "Down":
-            move_shape(0, 1)
+            move_shape(0, 1, manual=True)
         elif event.keysym == "Up":
             rotate_shape()
 
