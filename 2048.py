@@ -6,9 +6,12 @@ class Game2048:
         self.master = master
         self.master.title("2048 Game")
         self.grid = [[0] * 4 for _ in range(4)]
-        self.create_widgets()
-        self.start_game()
         self.animation_speed = 50  # Speed of animation in milliseconds
+        self.score = 0
+        self.highscore = 0
+        self.create_widgets()
+        self.create_score_widgets()
+        self.start_game()
 
     def create_widgets(self):
         self.cells = []
@@ -20,6 +23,12 @@ class Game2048:
                 row.append(cell)
             self.cells.append(row)
         self.master.bind("<Key>", self.key_pressed)
+
+    def create_score_widgets(self):
+        self.score_label = tk.Label(self.master, text=f"Score: {self.score}", font=("Helvetica", 16))
+        self.score_label.grid(row=4, column=0, columnspan=2)
+        self.highscore_label = tk.Label(self.master, text=f"High Score: {self.highscore}", font=("Helvetica", 16))
+        self.highscore_label.grid(row=4, column=2, columnspan=2)
 
     def start_game(self):
         self.add_new_tile()
@@ -37,6 +46,11 @@ class Game2048:
             for j in range(4):
                 value = self.grid[i][j]
                 self.cells[i][j].config(text=str(value) if value != 0 else "", bg=self.get_color(value))
+        self.update_score()
+
+    def update_score(self):
+        self.score_label.config(text=f"Score: {self.score}")
+        self.highscore_label.config(text=f"High Score: {self.highscore}")
 
     def get_color(self, value):
         colors = {
@@ -63,6 +77,7 @@ class Game2048:
             for i in range(3):
                 if row[i] == row[i + 1] and row[i] != 0:
                     row[i] *= 2
+                    self.score += row[i]
                     row[i + 1] = 0
             return row
 
@@ -90,6 +105,8 @@ class Game2048:
 
         if moved:
             self.animate_move()
+            if self.score > self.highscore:
+                self.highscore = self.score
 
     def animate_move(self):
         for i in range(4):
