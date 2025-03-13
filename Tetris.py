@@ -5,6 +5,7 @@ import random
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 20
 CELL_SIZE = 30
+SIDE_PANEL_WIDTH = 200  # Added side panel width
 SHAPES = [
     [[1, 1, 1, 1]],  # I
     [[1, 1], [1, 1]],  # O
@@ -18,11 +19,12 @@ SHAPES = [
 # Initialize the main window
 root = tk.Tk()
 root.title("Tetris")
-root.geometry(f"{BOARD_WIDTH * CELL_SIZE}x{BOARD_HEIGHT * CELL_SIZE}")
+root.geometry(f"{(BOARD_WIDTH * CELL_SIZE) + SIDE_PANEL_WIDTH}x{BOARD_HEIGHT * CELL_SIZE}")
 root.configure(bg="#000000")
 
 # Create the canvas for the game board
-canvas = tk.Canvas(root, width=BOARD_WIDTH * CELL_SIZE, height=BOARD_HEIGHT * CELL_SIZE, bg="#000000")
+canvas = tk.Canvas(root, width=(BOARD_WIDTH * CELL_SIZE) + SIDE_PANEL_WIDTH, 
+                  height=BOARD_HEIGHT * CELL_SIZE, bg="#000000")
 canvas.pack()
 
 # Draw grid lines
@@ -40,6 +42,7 @@ score = 0
 high_score = 0
 speed_level = 1
 game_over_flag = False
+paused = False
 
 def draw_shape():
     canvas.delete("all")
@@ -76,14 +79,39 @@ def draw_board():
                 )
 
 def draw_score():
-    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 10, text=f"Score: {score}", fill="yellow", font=("Helvetica", 16, "bold"))
-    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 30, text=f"High Score: {high_score}", fill="yellow", font=("Helvetica", 16, "bold"))
-    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, 50, text=f"Speed Level: {speed_level}", fill="yellow", font=("Helvetica", 16, "bold"))
+    # Score panel on the right side
+    panel_x = BOARD_WIDTH * CELL_SIZE + (SIDE_PANEL_WIDTH // 2)
+    
+    # Move scores up slightly
+    canvas.create_text(panel_x, 30, text=f"Score: {score}", 
+                      fill="yellow", font=("Helvetica", 16, "bold"))
+    canvas.create_text(panel_x, 70, text=f"High Score: {high_score}", 
+                      fill="yellow", font=("Helvetica", 16, "bold"))
+    canvas.create_text(panel_x, 110, text=f"Speed Level: {speed_level}", 
+                      fill="yellow", font=("Helvetica", 16, "bold"))
+    
+    # Adjust control text positions
+    canvas.create_text(panel_x, (BOARD_HEIGHT * CELL_SIZE // 2) - 50,
+                      text="Controls:", fill="white", font=("Helvetica", 14, "bold"))
+    canvas.create_text(panel_x, (BOARD_HEIGHT * CELL_SIZE // 2) - 20,
+                      text="←→ Move left/right", fill="white", font=("Helvetica", 12))
+    canvas.create_text(panel_x, (BOARD_HEIGHT * CELL_SIZE // 2) + 0,
+                      text="↑ Rotate", fill="white", font=("Helvetica", 12))
+    canvas.create_text(panel_x, (BOARD_HEIGHT * CELL_SIZE // 2) + 20,
+                      text="↓ Move down", fill="white", font=("Helvetica", 12))
+    canvas.create_text(panel_x, (BOARD_HEIGHT * CELL_SIZE // 2) + 40,
+                      text="P Pause game", fill="white", font=("Helvetica", 12))
+
+    if paused:
+        canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2,
+                         text="PAUSED", fill="white", font=("Helvetica", 24, "bold"))
+        canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2 + 30,
+                         text="Press P to resume", fill="white", font=("Helvetica", 16))
 
 def auto_drop():
-    if not game_over_flag:
+    if not game_over_flag and not paused:
         move_shape(0, 1)
-        root.after(750 // speed_level, auto_drop)
+    root.after(900 // speed_level, auto_drop)
 
 def move_shape(dx, dy):
     global current_x, current_y, current_shape, board, score, speed_level
@@ -176,15 +204,24 @@ def rotate_shape():
     canvas.delete("all")
     draw_shape()
 
+def toggle_pause():
+    global paused
+    paused = not paused
+    draw_shape()
+
 def on_key_press(event):
-    if event.keysym == "Left":
-        move_shape(-1, 0)
-    elif event.keysym == "Right":
-        move_shape(1, 0)
-    elif event.keysym == "Down":
-        move_shape(0, 1)
-    elif event.keysym == "Up":
-        rotate_shape()
+    if event.keysym == "p":
+        toggle_pause()
+        return
+    if not paused:
+        if event.keysym == "Left":
+            move_shape(-1, 0)
+        elif event.keysym == "Right":
+            move_shape(1, 0)
+        elif event.keysym == "Down":
+            move_shape(0, 1)
+        elif event.keysym == "Up":
+            rotate_shape()
 
 # Bind key events
 root.bind("<Key>", on_key_press)
