@@ -1,5 +1,7 @@
 import tkinter as tk
 import random
+import json
+import os
 
 # Constants
 BOARD_WIDTH = 10
@@ -22,6 +24,27 @@ root.title("Tetris")
 root.geometry(f"{(BOARD_WIDTH * CELL_SIZE) + SIDE_PANEL_WIDTH}x{BOARD_HEIGHT * CELL_SIZE}")
 root.configure(bg="#000000")
 
+# High scores file
+HIGH_SCORES_FILE = "high_scores.json"
+
+# Load high scores
+def load_high_scores():
+    if os.path.exists(HIGH_SCORES_FILE):
+        with open(HIGH_SCORES_FILE, "r") as file:
+            return json.load(file)
+    return []
+
+# Save high scores
+def save_high_scores(high_scores):
+    with open(HIGH_SCORES_FILE, "w") as file:
+        json.dump(high_scores, file)
+
+# Get top 10 high scores
+def get_top_high_scores():
+    high_scores = load_high_scores()
+    high_scores.sort(key=lambda x: x["score"], reverse=True)
+    return high_scores[:10]
+
 # Create the canvas for the game board
 canvas = tk.Canvas(root, width=(BOARD_WIDTH * CELL_SIZE) + SIDE_PANEL_WIDTH, 
                   height=BOARD_HEIGHT * CELL_SIZE, bg="#000000")
@@ -43,6 +66,7 @@ high_score = 0
 speed_level = 1
 game_over_flag = False
 paused = False
+high_scores = get_top_high_scores()
 
 def draw_shape():
     canvas.delete("all")
@@ -164,13 +188,19 @@ def game_over():
     draw_board()
     draw_score()
     canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2, text="Game Over", fill="red", font=("Helvetica", 24, "bold"))
-    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2 + 30, text="Press Space to Replay", fill="white", font=("Helvetica", 16, "bold"))
+    canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2 + 30, text="Enter your name:", fill="white", font=("Helvetica", 16, "bold"))
+    name_entry = tk.Entry(root)
+    canvas.create_window(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2 + 60, window=name_entry)
+    name_entry.bind("<Return>", lambda event: save_score(name_entry.get()))
     root.update()
     root.bind("<Key>", on_key_press_game_over)
 
-def on_key_press_game_over(event):
-    if event.keysym == "space":
-        reset_game()
+def save_score(name):
+    global high_scores
+    high_scores.append({"name": name, "score": score})
+    high_scores = sorted(high_scores, key=lambda x: x["score"], reverse=True)[:10]
+    save_high_scores(high_scores)
+    reset_game()
 
 def reset_game():
     global board, current_shape, current_x, current_y, score, speed_level, game_over_flag
@@ -222,6 +252,10 @@ def on_key_press(event):
             move_shape(0, 1, manual=True)
         elif event.keysym == "Up":
             rotate_shape()
+
+def on_key_press_game_over(event):
+    if event.keysym == "space":
+        reset_game()
 
 # Bind key events
 root.bind("<Key>", on_key_press)
