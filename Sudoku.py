@@ -1,5 +1,17 @@
 import numpy as np
 import pygame
+import time  # Add import for time
+import os
+import sys
+
+# Suppress Pygame welcome message
+class NullWriter:
+    def write(self, _):
+        pass
+
+null_writer = NullWriter()
+original_stdout = sys.stdout
+sys.stdout = null_writer
 
 # UI Constants
 WIDTH = 550
@@ -15,11 +27,13 @@ HARD = 60    # Remove 60 numbers
 class Sudoku:
     def __init__(self, board):
         self.board = np.array(board)
+        self.original_board = self.board.copy()  # Keep a copy of the original board
         pygame.init()
         self.window = pygame.display.set_mode((WIDTH, WIDTH))
-        pygame.display.set_caption("Sudoku Solver")
+        pygame.display.set_caption("Sudoku Game")
         self.font = pygame.font.SysFont('Comic Sans MS', 35)
         self.setup_ui()
+        self.start_time = time.time()  # Record start time
 
     def is_valid(self, num, pos):
         # Check row
@@ -85,7 +99,13 @@ class Sudoku:
         for i in range(9):
             for j in range(9):
                 if self.board[i][j] != 0:
-                    value = self.font.render(str(self.board[i][j]), True, (52, 31, 151))
+                    # Use blue for static numbers, black for inputted numbers, and red for wrong numbers
+                    if self.board[i][j] < 0:
+                        value_color = (255, 0, 0)  # Red for wrong numbers
+                        value = self.font.render(str(-self.board[i][j]), True, value_color)
+                    else:
+                        value_color = (52, 31, 151) if self.original_board[i][j] != 0 else (0, 0, 0)
+                        value = self.font.render(str(self.board[i][j]), True, value_color)
                     self.window.blit(value, ((j+1)*50 + 15, (i+1)*50))
         pygame.display.update()
 
@@ -95,41 +115,75 @@ class Sudoku:
         self.update_board_display()
         if selected:
             row, col = selected
-            pygame.draw.rect(self.window, HIGHLIGHT_COLOR,
+            pygame.draw.rect(self.window, (255, 165, 0),  # Orange border
                 ((col+1)*50 + BUFFER, (row+1)*50 + BUFFER,
-                50 - 2*BUFFER, 50 - 2*BUFFER))
+                50 - 2*BUFFER, 50 - 2*BUFFER), 3)
             # Redraw number if cell is not empty
             if self.board[row][col] != 0:
-                value = self.font.render(str(self.board[row][col]), True, (52, 31, 151))
+                if self.board[row][col] < 0:
+                    value_color = (255, 0, 0)  # Red for wrong numbers
+                    value = self.font.render(str(-self.board[row][col]), True, value_color)
+                else:
+                    value_color = (52, 31, 151) if self.original_board[row][col] != 0 else (0, 0, 0)
+                    value = self.font.render(str(self.board[row][col]), True, value_color)
                 self.window.blit(value, ((col+1)*50 + 15, (row+1)*50))
         pygame.display.update()
 
     def play(self):
         selected = None
+        puzzle_solved = False
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     return
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN and not puzzle_solved:
                     pos = pygame.mouse.get_pos()
                     if 50 <= pos[0] <= 500 and 50 <= pos[1] <= 500:
                         x = (pos[1] - 50) // 50
                         y = (pos[0] - 50) // 50
                         selected = (x, y)
                         self.highlight_cell(selected)
-                if event.type == pygame.KEYDOWN and selected:
+                if event.type == pygame.KEYDOWN and selected and not puzzle_solved:
                     if event.unicode.isdigit() and 1 <= int(event.unicode) <= 9:
                         num = int(event.unicode)
                         if self.is_valid(num, selected):
                             self.board[selected[0]][selected[1]] = num
                             self.highlight_cell(selected)
+                            # Display inputted number in black
+                            value = self.font.render(str(num), True, (0, 0, 0))
+                            self.window.blit(value, ((selected[1]+1)*50 + 15, (selected[0]+1)*50))
+                            pygame.display.update()
+                        else:
+                            # Display wrong number in red and keep it on screen
+                            value = self.font.render(str(num), True, (255, 0, 0))
+                            self.window.blit(value, ((selected[1]+1)*50 + 15, (selected[0]+1)*50))
+                            pygame.display.update()
+                            # Keep the wrong number in the board for display
+                            self.board[selected[0]][selected[1]] = -num
                     elif event.key == pygame.K_RETURN:
                         if self.solve():
                             self.update_board_display()
-                            return
+                            puzzle_solved = True
+                            self.display_play_time()
+                    elif event.key == pygame.K_s:  # Press 's' to submit solution
+                        puzzle_solved = True
+                        self.display_play_time()
             
             pygame.display.update()
+
+    def display_play_time(self):
+        play_time = time.time() - self.start_time
+        hours, rem = divmod(play_time, 3600)
+        minutes, seconds = divmod(rem, 60)
+        time_str = f"Completed in: {int(hours):02}:{int(minutes):02}:{int(seconds):02}"
+        # Display completed time on the screen
+        font = pygame.font.SysFont('Comic Sans MS', 35)
+        text_surface = font.render(time_str, True, (52, 31, 151))
+        text_rect = text_surface.get_rect(center=(WIDTH // 2, 25))  # Center the text with padding
+        self.window.fill(BACKGROUND_COLOR, (0, 0, WIDTH, 50))  # Clear previous time display
+        self.window.blit(text_surface, text_rect)
+        pygame.display.update()
 
 def generate_random_board(difficulty=MEDIUM):
     import random
@@ -202,6 +256,9 @@ def select_difficulty():
                             return MEDIUM
                         elif text == 'HARD':
                             return HARD
+
+# Restore original stdout
+sys.stdout = original_stdout
 
 if __name__ == "__main__":
     difficulty = select_difficulty()
