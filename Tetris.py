@@ -67,6 +67,7 @@ high_score = high_scores[0]["score"] if high_scores else 0
 speed_level = 1
 game_over_flag = False
 paused = False
+auto_drop_active = False  # Add this flag to control auto-drop
 
 def draw_shape():
     canvas.delete("all")
@@ -145,9 +146,22 @@ def draw_score():
                          text="Press P to resume", fill="white", font=("Helvetica", 16))
 
 def auto_drop():
+    global auto_drop_active
     if not game_over_flag and not paused:
         move_shape(0, 1)
-    root.after(1000 // speed_level, auto_drop)
+    if auto_drop_active:  # Check if auto-drop is active
+        root.after(1000 // speed_level, auto_drop)
+
+def calculate_score(lines_cleared):
+    if lines_cleared == 1:
+        return 1
+    elif lines_cleared == 2:
+        return 3
+    elif lines_cleared == 3:
+        return 6
+    elif lines_cleared == 4:
+        return 10
+    return 0
 
 def move_shape(dx, dy, manual=False):
     global current_x, current_y, current_shape, board, score, speed_level
@@ -159,16 +173,18 @@ def move_shape(dx, dy, manual=False):
         current_x = new_x
         current_y = new_y
     else:
-        if dy > 0 and not manual:  # If the collision is due to downward movement and not manual
+        if dy > 0:  # If the collision is due to downward movement
             place_shape()
             lines_cleared = clear_lines()
-            score += lines_cleared * 1
+            score += calculate_score(lines_cleared)  # Use the new scoring system
             speed_level = score // 30 + 1
             current_shape = random.choice(SHAPES)
             current_x = BOARD_WIDTH // 2 - len(current_shape[0]) // 2
             current_y = 0
             if check_collision(current_x, current_y, current_shape):
                 game_over()
+            else:
+                draw_shape()  # Ensure the new shape is drawn
     if not game_over_flag:
         canvas.delete("all")
         draw_shape()
@@ -190,8 +206,9 @@ def clear_lines():
     return lines_cleared
 
 def game_over():
-    global high_score, score, speed_level, game_over_flag, entry_frame, name_entry
+    global high_score, score, speed_level, game_over_flag, entry_frame, name_entry, auto_drop_active
     game_over_flag = True
+    auto_drop_active = False  # Deactivate auto-drop
     if score > high_score:
         high_score = score
     canvas.delete("all")
@@ -230,7 +247,7 @@ def save_score(name):
     reset_game()
 
 def reset_game():
-    global board, current_shape, current_x, current_y, score, speed_level, game_over_flag
+    global board, current_shape, current_x, current_y, score, speed_level, game_over_flag, auto_drop_active
     canvas.delete("all")
     board = [[0] * BOARD_WIDTH for _ in range(BOARD_HEIGHT)]
     current_shape = random.choice(SHAPES)
@@ -239,9 +256,10 @@ def reset_game():
     score = 0
     speed_level = 1
     game_over_flag = False
+    auto_drop_active = True  # Activate auto-drop
     root.bind("<Key>", on_key_press)
     draw_shape()
-    auto_drop()
+    auto_drop()  # Ensure auto_drop is called here to reset the speed level
 
 def check_collision(x, y, shape):
     for row_index, row in enumerate(shape):
@@ -288,6 +306,7 @@ def on_key_press_game_over(event):
 root.bind("<Key>", on_key_press)
 
 # Start the game
+auto_drop_active = True  # Activate auto-drop at the start of the game
 draw_shape()
 auto_drop()
 root.mainloop()

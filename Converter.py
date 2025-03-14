@@ -379,7 +379,6 @@ class ConverterGUI:
             value = float(self.weight_entry.get())
             from_unit = self.from_weight_unit.get().lower()
             to_unit = self.to_weight_unit.get().lower()
-            print(f"Converting {value} from {from_unit} to {to_unit}")  # Debug print
             result = convert_weight(value, from_unit, to_unit)
             self.weight_result.config(text=f"{value} {self.from_weight_unit.get()} = {result:.2f} {self.to_weight_unit.get()}", foreground=self.colors['success'])
         except Exception as e:
