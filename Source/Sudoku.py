@@ -14,6 +14,7 @@ sys.stdout = null_writer
 
 # UI Constants
 WIDTH = 550
+HEIGHT = 600
 BACKGROUND_COLOR = (245, 251, 250)
 HIGHLIGHT_COLOR = (188, 214, 236)  # Light blue highlight
 BUFFER = 5
@@ -28,9 +29,11 @@ class Sudoku:
         self.board = np.array(board)
         self.original_board = self.board.copy()  # Keep a copy of the original board
         pygame.init()
-        self.window = pygame.display.set_mode((WIDTH, WIDTH))
+        self.window = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Sudoku Game")
         self.font = pygame.font.SysFont('Comic Sans MS', 35)
+        self.submit_button_color = (0, 0, 0)  # Default color for submit button
+        self.submit_button = pygame.Rect(WIDTH // 2 - 75, HEIGHT - 80, 150, 40)  # Define submit button
         self.setup_ui()
         self.start_time = time.time()  # Record start time
 
@@ -93,6 +96,13 @@ class Sudoku:
                 pygame.draw.line(self.window, (0,0,0), (50 + 50*i, 50), (50 + 50*i, 500), 2)
                 pygame.draw.line(self.window, (0,0,0), (50, 50 + 50*i), (500, 50 + 50*i), 2)
         self.update_board_display()
+        self.submit_button = pygame.Rect(WIDTH // 2 - 75, HEIGHT - 80, 150, 40)  # Define submit button
+        pygame.draw.rect(self.window, self.submit_button_color, self.submit_button)  # Draw submit button background
+        pygame.draw.rect(self.window, (0, 0, 0), self.submit_button, 2)  # Draw submit button border
+        submit_text = self.font.render("Submit", True, (255, 255, 255))
+        text_rect = submit_text.get_rect(center=self.submit_button.center)
+        self.window.blit(submit_text, text_rect)
+        pygame.display.update()
 
     def update_board_display(self):
         for i in range(9):
@@ -128,10 +138,47 @@ class Sudoku:
                 self.window.blit(value, ((col+1)*50 + 15, (row+1)*50))
         pygame.display.update()
 
+    def handle_submit(self):
+        incorrect_cells = []
+        empty_cells = []
+        for i in range(9):
+            for j in range(9):
+                if self.board[i][j] == 0:
+                    empty_cells.append((i, j))
+                elif self.board[i][j] < 0 or not self.is_valid(abs(self.board[i][j]), (i, j)):
+                    incorrect_cells.append((i, j))
+
+        if empty_cells or incorrect_cells:
+            for cell in empty_cells:
+                pygame.draw.rect(self.window, (255, 0, 0),  # Red border for empty cells
+                                 ((cell[1] + 1) * 50 + BUFFER, (cell[0] + 1) * 50 + BUFFER,
+                                  50 - 2 * BUFFER, 50 - 2 * BUFFER), 3)
+            for cell in incorrect_cells:
+                value = self.font.render(str(abs(self.board[cell[0]][cell[1]])), True, (255, 0, 0))  # Red number for incorrect cells
+                self.window.blit(value, ((cell[1] + 1) * 50 + 15, (cell[0] + 1) * 50))
+            pygame.display.update()
+        else:
+            self.display_play_time()
+
     def play(self):
         selected = None
         puzzle_solved = False
         while True:
+            mouse_pos = pygame.mouse.get_pos()
+            if self.submit_button.collidepoint(mouse_pos):
+                new_color = (100, 100, 255)  # Change color on hover
+            else:
+                new_color = (0, 0, 0)  # Default color
+
+            if new_color != self.submit_button_color:
+                self.submit_button_color = new_color
+                pygame.draw.rect(self.window, self.submit_button_color, self.submit_button)  # Draw submit button background
+                pygame.draw.rect(self.window, (0, 0, 0), self.submit_button, 2)  # Draw submit button border
+                submit_text = self.font.render("Submit", True, (255, 255, 255))
+                text_rect = submit_text.get_rect(center=self.submit_button.center)
+                self.window.blit(submit_text, text_rect)
+                pygame.display.update(self.submit_button)  # Update only the submit button area
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -143,32 +190,30 @@ class Sudoku:
                         y = (pos[0] - 50) // 50
                         selected = (x, y)
                         self.highlight_cell(selected)
-                if event.type == pygame.KEYDOWN and selected and not puzzle_solved:
-                    if event.unicode.isdigit() and 1 <= int(event.unicode) <= 9:
-                        num = int(event.unicode)
-                        if self.is_valid(num, selected):
-                            self.board[selected[0]][selected[1]] = num
-                            self.highlight_cell(selected)
-                            # Display inputted number in black
-                            value = self.font.render(str(num), True, (0, 0, 0))
-                            self.window.blit(value, ((selected[1]+1)*50 + 15, (selected[0]+1)*50))
-                            pygame.display.update()
-                        else:
-                            # Display wrong number in red and keep it on screen
-                            value = self.font.render(str(num), True, (255, 0, 0))
-                            self.window.blit(value, ((selected[1]+1)*50 + 15, (selected[0]+1)*50))
-                            pygame.display.update()
-                            # Keep the wrong number in the board for display
-                            self.board[selected[0]][selected[1]] = -num
-                    elif event.key == pygame.K_RETURN:
-                        if self.solve():
-                            self.update_board_display()
+                    elif self.submit_button.collidepoint(pos):  # Check if submit button is clicked
+                        self.handle_submit()
+                        if not any(self.board[i][j] == 0 or self.board[i][j] < 0 for i in range(9) for j in range(9)):
                             puzzle_solved = True
-                            self.display_play_time()
-                    elif event.key == pygame.K_s:  # Press 's' to submit solution
-                        puzzle_solved = True
-                        self.display_play_time()
-            
+                if event.type == pygame.KEYDOWN and selected and not puzzle_solved:
+                    if self.original_board[selected[0]][selected[1]] == 0:  # Only allow input in non-static cells
+                        if event.unicode.isdigit() and 1 <= int(event.unicode) <= 9:
+                            num = int(event.unicode)
+                            if self.is_valid(num, selected):
+                                self.board[selected[0]][selected[1]] = num
+                                self.highlight_cell(selected)
+                                # Display inputted number in black
+                                value = self.font.render(str(num), True, (0, 0, 0))
+                                self.window.blit(value, ((selected[1]+1)*50 + 15, (selected[0]+1)*50))
+                                pygame.display.update()
+                            else:
+                                self.board[selected[0]][selected[1]] = num
+                                self.highlight_cell(selected)
+                                # Display wrong number in red and keep it on screen
+                                value = self.font.render(str(num), True, (255, 0, 0))
+                                self.window.blit(value, ((selected[1]+1)*50 + 15, (selected[0]+1)*50))
+                                pygame.display.update()
+                                # Keep the wrong number in the board for display
+                                self.board[selected[0]][selected[1]] = -num
             pygame.display.update()
 
     def display_play_time(self):
