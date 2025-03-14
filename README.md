@@ -44,6 +44,20 @@ cd project_name
 python main.py
 ```
 
+### Running `main.py` and Selecting a `.py` File
+
+To run `main.py` and select a `.py` file from a list, follow these steps:
+
+1. Navigate to the project directory:
+   ```bash
+   cd project_name
+   ```
+2. Run `main.py`:
+   ```bash
+   python main.py
+   ```
+3. Follow the on-screen instructions to select a `.py` file from the list.
+
 ## Contributing
 
 Contributions are always welcome! To contribute, follow these steps:
