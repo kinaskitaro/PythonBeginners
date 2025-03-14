@@ -82,7 +82,7 @@ def draw_shape():
                     (current_x + x + 1) * CELL_SIZE, (current_y + y + 1) * CELL_SIZE,
                     fill="#00FF00", outline="#000000"
                 )
-    draw_score()
+    draw_score_panel()  # Draw the score panel
 
 def draw_grid():
     for i in range(BOARD_WIDTH):
@@ -103,9 +103,11 @@ def draw_board():
                     fill="#00FF00", outline="#000000"
                 )
 
-def draw_score():
-    # Score panel on the right side
+def draw_score_panel():
     panel_x = BOARD_WIDTH * CELL_SIZE + (SIDE_PANEL_WIDTH // 2)
+    
+    # Draw the border line between the left and right sides
+    canvas.create_line(BOARD_WIDTH * CELL_SIZE, 0, BOARD_WIDTH * CELL_SIZE, BOARD_HEIGHT * CELL_SIZE, fill="#FFFFFF", width=2)
     
     # Move scores up slightly
     canvas.create_text(panel_x, 30, text=f"Score: {score}", 
@@ -215,7 +217,7 @@ def game_over():
     draw_grid()
     draw_border()
     draw_board()
-    draw_score()
+    draw_score_panel()  # Draw the score panel
     canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2, text="Game Over", fill="red", font=("Helvetica", 24, "bold"))
     canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2 + 30, text="Enter your name:", fill="white", font=("Helvetica", 16, "bold"))
     
@@ -233,10 +235,10 @@ def game_over():
     name_entry.bind("<Return>", lambda event: submit_name())  # Bind Enter key to submit_name function
     
     root.update()
-    root.bind("<Key>", on_key_press_game_over)
 
 def submit_name():
     save_score(name_entry.get())
+    reset_game()  # Reset the game after submitting the score
 
 def save_score(name):
     global high_scores, entry_frame
@@ -244,7 +246,7 @@ def save_score(name):
     high_scores = sorted(high_scores, key=lambda x: x["score"], reverse=True)[:10]
     save_high_scores(high_scores)
     entry_frame.destroy()  # Destroy the entry frame after submitting the score
-    reset_game()
+    start_button.place(x=82, y=(BOARD_HEIGHT * CELL_SIZE // 2) - 25)  # Show the start button again on the left side
 
 def reset_game():
     global board, current_shape, current_x, current_y, score, speed_level, game_over_flag, auto_drop_active
@@ -256,10 +258,11 @@ def reset_game():
     score = 0
     speed_level = 1
     game_over_flag = False
-    auto_drop_active = True  # Activate auto-drop
-    root.bind("<Key>", on_key_press)
-    draw_shape()
-    auto_drop()  # Ensure auto_drop is called here to reset the speed level
+    auto_drop_active = False  # Do not activate auto-drop immediately
+    draw_board()
+    draw_grid()
+    draw_border()
+    draw_score_panel()
 
 def check_collision(x, y, shape):
     for row_index, row in enumerate(shape):
@@ -298,15 +301,29 @@ def on_key_press(event):
         elif event.keysym == "Up":
             rotate_shape()
 
-def on_key_press_game_over(event):
-    if event.keysym == "space":
-        reset_game()
+def start_game():
+    global auto_drop_active, game_over_flag, score, speed_level, board, current_shape, current_x, current_y
+    auto_drop_active = True  # Activate auto-drop at the start of the game
+    game_over_flag = False
+    score = 0
+    speed_level = 1
+    board = [[0] * BOARD_WIDTH for _ in range(BOARD_HEIGHT)]
+    current_shape = random.choice(SHAPES)
+    current_x = BOARD_WIDTH // 2 - len(current_shape[0]) // 2
+    current_y = 0
+    start_button.place_forget()  # Hide the start button
+    draw_shape()
+    auto_drop()
+
+# Create a Start button to start the game
+start_button = tk.Button(root, text="Start Game", command=start_game, font=("Helvetica", 14, "bold"), bg="green", fg="white", padx=10, pady=5)
+start_button.place(x=82, y=(BOARD_HEIGHT * CELL_SIZE // 2) - 25)  # Position the button in the center of the left side
 
 # Bind key events
 root.bind("<Key>", on_key_press)
 
-# Start the game
-auto_drop_active = True  # Activate auto-drop at the start of the game
-draw_shape()
-auto_drop()
+# Draw the initial score panel
+draw_score_panel()
+
+# Start the main loop
 root.mainloop()
