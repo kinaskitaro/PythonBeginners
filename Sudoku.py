@@ -1,7 +1,6 @@
 import numpy as np
 import pygame
 import time  # Add import for time
-import os
 import sys
 
 # Suppress Pygame welcome message
