@@ -62,8 +62,8 @@ class Game2048:
     def key_pressed(self, event):
         if event.keysym in ["Up", "Down", "Left", "Right"]:
             self.move(event.keysym)
-            self.add_new_tile()
-            self.update_grid()
+            self.master.after(self.animation_speed, self.add_new_tile)
+            self.master.after(self.animation_speed, self.update_grid)
             if self.check_game_over():
                 self.game_over()
 
