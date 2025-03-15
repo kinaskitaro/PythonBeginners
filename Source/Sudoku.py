@@ -214,6 +214,11 @@ class Sudoku:
                                 pygame.display.update()
                                 # Keep the wrong number in the board for display
                                 self.board[selected[0]][selected[1]] = -num
+                        elif event.key == pygame.K_BACKSPACE:
+                            # Clear the cell if backspace is pressed
+                            self.board[selected[0]][selected[1]] = 0
+                            self.highlight_cell(selected)
+                            pygame.display.update()
             pygame.display.update()
 
     def display_play_time(self):

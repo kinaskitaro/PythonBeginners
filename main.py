@@ -9,7 +9,7 @@ def execute_python_file(filepath):
     subprocess.run(["python", filepath])
 
 if __name__ == "__main__":
-    directory = os.path.dirname(os.path.abspath(__file__)) + "/Source"
+    directory = os.path.dirname(os.path.abspath(__file__)) + "\\Source"
     print(directory)
     python_files = list_python_files(directory)
     
