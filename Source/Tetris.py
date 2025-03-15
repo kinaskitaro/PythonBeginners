@@ -134,12 +134,12 @@ def draw_score_panel():
                       text="P Pause game", fill="white", font=("Helvetica", 12))
 
     # Display top 10 high scores
-    top_ten_x = panel_x - 50  # Move the top ten list to the left
+    top_ten_x = panel_x - 90  # Move the top ten list to the left
     canvas.create_text(panel_x, (BOARD_HEIGHT * CELL_SIZE // 2) + 20,
                       text="Top 10 High Scores:", fill="white", font=("Helvetica", 14, "bold"))
     for index, high_score in enumerate(high_scores):
         canvas.create_text(top_ten_x, (BOARD_HEIGHT * CELL_SIZE // 2) + 50 + (index * 20),
-                          text=f"{index + 1}. {high_score['name']}:\t {high_score['score']}", fill="white", font=("Helvetica", 14), anchor="w")
+                          text=f"{index + 1}. {high_score['name']}:     {high_score['score']}", fill="white", font=("Helvetica", 14), anchor="w")
 
     if paused:
         canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2,
