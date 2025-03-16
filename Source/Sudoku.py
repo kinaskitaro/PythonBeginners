@@ -13,7 +13,7 @@ original_stdout = sys.stdout
 sys.stdout = null_writer
 
 # UI Constants
-WIDTH = 550
+WIDTH = 770  # Increase width to accommodate the number list
 HEIGHT = 600
 BACKGROUND_COLOR = (245, 251, 250)
 HIGHLIGHT_COLOR = (188, 214, 236)  # Light blue highlight
@@ -34,6 +34,8 @@ class Sudoku:
         self.font = pygame.font.SysFont('Comic Sans MS', 35)
         self.submit_button_color = (0, 0, 0)  # Default color for submit button
         self.submit_button = pygame.Rect(WIDTH // 2 - 75, HEIGHT - 80, 150, 40)  # Define submit button
+        self.number_counts = {i: 9 for i in range(1, 10)}  # Initialize counts for numbers 1-9
+        self.update_number_counts()  # Update counts based on the initial board
         self.setup_ui()
         self.start_time = time.time()  # Record start time
 
@@ -85,6 +87,20 @@ class Sudoku:
 
         return None
 
+    def update_number_counts(self):
+        self.number_counts = {i: 9 for i in range(1, 10)}
+        for i in range(9):
+            for j in range(9):
+                num = abs(self.board[i][j])
+                if num != 0:
+                    self.number_counts[num] -= 1
+
+    def display_number_counts(self):
+        for i, num in enumerate(range(1, 10)):
+            count = self.number_counts[num]
+            text = self.font.render(f"Number {num}: {count}", True, (120, 100, 120))
+            self.window.blit(text, (550, 50 + i * 50))
+
     def setup_ui(self):
         self.window.fill(BACKGROUND_COLOR)
         # Draw grid lines
@@ -102,6 +118,7 @@ class Sudoku:
         submit_text = self.font.render("Submit", True, (255, 255, 255))
         text_rect = submit_text.get_rect(center=self.submit_button.center)
         self.window.blit(submit_text, text_rect)
+        self.display_number_counts()  # Display number counts
         pygame.display.update()
 
     def update_board_display(self):
@@ -116,6 +133,7 @@ class Sudoku:
                         value_color = (52, 31, 151) if self.original_board[i][j] != 0 else (0, 0, 0)
                         value = self.font.render(str(self.board[i][j]), True, value_color)
                     self.window.blit(value, ((j+1)*50 + 15, (i+1)*50))
+        self.display_number_counts()  # Update number counts display
         pygame.display.update()
 
     def highlight_same_number(self, selected):
@@ -181,6 +199,8 @@ class Sudoku:
             pygame.display.update()
         else:
             self.display_play_time()
+        self.update_number_counts()  # Update counts after submission
+        self.display_number_counts()  # Display updated counts
 
     def play(self):
         selected = None
@@ -236,11 +256,15 @@ class Sudoku:
                                 pygame.display.update()
                                 # Keep the wrong number in the board for display
                                 self.board[selected[0]][selected[1]] = -num
+                            self.update_number_counts()  # Update counts after input
+                            self.display_number_counts()  # Display updated counts
                         elif event.key == pygame.K_BACKSPACE or event.unicode == '0':
                             # Clear the cell if backspace is pressed
                             self.board[selected[0]][selected[1]] = 0
                             self.highlight_cell(selected)
                             pygame.display.update()
+                            self.update_number_counts()  # Update counts after clearing
+                            self.display_number_counts()  # Display updated counts
             pygame.display.update()
 
     def display_play_time(self):
