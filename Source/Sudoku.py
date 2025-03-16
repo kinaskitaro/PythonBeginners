@@ -33,7 +33,11 @@ class Sudoku:
         pygame.display.set_caption("Sudoku Game")
         self.font = pygame.font.SysFont('Comic Sans MS', 35)
         self.submit_button_color = (0, 0, 0)  # Default color for submit button
-        self.submit_button = pygame.Rect(WIDTH // 2 - 75, HEIGHT - 80, 150, 40)  # Define submit button
+        self.restart_button_color = (0, 0, 0)  # Default color for restart button
+        self.reset_button_color = (0, 0, 0)  # Default color for reset button
+        self.restart_button = pygame.Rect(WIDTH // 2 - 225, HEIGHT - 80, 150, 40)  # Define restart button
+        self.reset_button = pygame.Rect(WIDTH // 2 - 75, HEIGHT - 80, 150, 40)  # Define reset button
+        self.submit_button = pygame.Rect(WIDTH // 2 + 75, HEIGHT - 80, 150, 40)  # Define submit button
         self.number_counts = {i: 9 for i in range(1, 10)}  # Initialize counts for numbers 1-9
         self.update_number_counts()  # Update counts based on the initial board
         self.setup_ui()
@@ -96,6 +100,8 @@ class Sudoku:
                     self.number_counts[num] -= 1
 
     def display_number_counts(self):
+        # Clear the area where the number counts are displayed
+        pygame.draw.rect(self.window, BACKGROUND_COLOR, (550, 50, 200, 450))
         for i, num in enumerate(range(1, 10)):
             count = self.number_counts[num]
             text = self.font.render(f"Number {num}: {count}", True, (120, 100, 120))
@@ -106,20 +112,44 @@ class Sudoku:
         # Draw grid lines
         for i in range(0, 10):
             if i % 3 == 0:
-                pygame.draw.line(self.window, (0,0,0), (50 + 50*i, 50), (50 + 50*i, 500), 4)
-                pygame.draw.line(self.window, (0,0,0), (50, 50 + 50*i), (500, 50 + 50*i), 4)
+                pygame.draw.line(self.window, (0, 0, 0), (50 + 50*i, 50), (50 + 50*i, 500), 4)
+                pygame.draw.line(self.window, (0, 0, 0), (50, 50 + 50*i), (500, 50 + 50*i), 4)
             else:
-                pygame.draw.line(self.window, (0,0,0), (50 + 50*i, 50), (50 + 50*i, 500), 2)
-                pygame.draw.line(self.window, (0,0,0), (50, 50 + 50*i), (500, 50 + 50*i), 2)
+                pygame.draw.line(self.window, (0, 0, 0), (50 + 50*i, 50), (50 + 50*i, 500), 2)
+                pygame.draw.line(self.window, (0, 0, 0), (50, 50 + 50*i), (500, 50 + 50*i), 2)
         self.update_board_display()
-        self.submit_button = pygame.Rect(WIDTH // 2 - 75, HEIGHT - 80, 150, 40)  # Define submit button
-        pygame.draw.rect(self.window, self.submit_button_color, self.submit_button)  # Draw submit button background
-        pygame.draw.rect(self.window, (0, 0, 0), self.submit_button, 2)  # Draw submit button border
-        submit_text = self.font.render("Submit", True, (255, 255, 255))
-        text_rect = submit_text.get_rect(center=self.submit_button.center)
-        self.window.blit(submit_text, text_rect)
-        self.display_number_counts()  # Display number counts
+        # Draw buttons
+        self.draw_button(self.restart_button, self.restart_button_color, "Restart")
+        self.draw_button(self.reset_button, self.reset_button_color, "Reset")
+        self.draw_button(self.submit_button, self.submit_button_color, "Submit")
         pygame.display.update()
+
+    def draw_button(self, button_rect, button_color, text):
+        # Draw gradient background
+        for i in range(button_rect.height):
+            color = (
+                button_color[0] + (255 - button_color[0]) * i // button_rect.height,
+                button_color[1] + (255 - button_color[1]) * i // button_rect.height,
+                button_color[2] + (255 - button_color[2]) * i // button_rect.height
+            )
+            pygame.draw.rect(self.window, color, (button_rect.x, button_rect.y + i, button_rect.width, 1))
+        # Draw rounded border
+        pygame.draw.rect(self.window, (0, 0, 0), button_rect, 2, border_radius=10)
+        button_text = self.font.render(text, True, (255, 255, 255))
+        text_rect = button_text.get_rect(center=button_rect.center)
+        self.window.blit(button_text, text_rect)
+
+    def reset_board(self):
+        self.board = self.original_board.copy()
+        self.update_number_counts()
+        self.setup_ui()
+
+    def restart_game(self):
+        difficulty = select_difficulty()
+        if difficulty is not None:
+            new_board = generate_random_board(difficulty)
+            self.__init__(new_board)
+            self.play()
 
     def update_board_display(self):
         for i in range(9):
@@ -207,35 +237,28 @@ class Sudoku:
         puzzle_solved = False
         while True:
             mouse_pos = pygame.mouse.get_pos()
-            if self.submit_button.collidepoint(mouse_pos):
-                new_color = (100, 100, 255)  # Change color on hover
-            else:
-                new_color = (0, 0, 0)  # Default color
-
-            if new_color != self.submit_button_color:
-                self.submit_button_color = new_color
-                pygame.draw.rect(self.window, self.submit_button_color, self.submit_button)  # Draw submit button background
-                pygame.draw.rect(self.window, (0, 0, 0), self.submit_button, 2)  # Draw submit button border
-                submit_text = self.font.render("Submit", True, (255, 255, 255))
-                text_rect = submit_text.get_rect(center=self.submit_button.center)
-                self.window.blit(submit_text, text_rect)
-                pygame.display.update(self.submit_button)  # Update only the submit button area
-
+            # Handle button hover colors
+            self.handle_button_hover(mouse_pos)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     return
-                if event.type == pygame.MOUSEBUTTONDOWN and not puzzle_solved:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos()
-                    if 50 <= pos[0] <= 500 and 50 <= pos[1] <= 500:
+                    if self.restart_button.collidepoint(pos):
+                        self.restart_game()
+                        return
+                    elif self.reset_button.collidepoint(pos):
+                        self.reset_board()
+                    elif self.submit_button.collidepoint(pos) and not puzzle_solved:
+                        self.handle_submit()
+                        if not any(self.board[i][j] == 0 or self.board[i][j] < 0 for i in range(9) for j in range(9)):
+                            puzzle_solved = True
+                    elif 50 <= pos[0] <= 500 and 50 <= pos[1] <= 500 and not puzzle_solved:
                         x = (pos[1] - 50) // 50
                         y = (pos[0] - 50) // 50
                         selected = (x, y)
                         self.highlight_cell(selected)
-                    elif self.submit_button.collidepoint(pos):  # Check if submit button is clicked
-                        self.handle_submit()
-                        if not any(self.board[i][j] == 0 or self.board[i][j] < 0 for i in range(9) for j in range(9)):
-                            puzzle_solved = True
                 if event.type == pygame.KEYDOWN and selected and not puzzle_solved:
                     if self.original_board[selected[0]][selected[1]] == 0:  # Only allow input in non-static cells
                         if event.unicode.isdigit() and 1 <= int(event.unicode) <= 9:
@@ -266,6 +289,37 @@ class Sudoku:
                             self.update_number_counts()  # Update counts after clearing
                             self.display_number_counts()  # Display updated counts
             pygame.display.update()
+
+    def handle_button_hover(self, mouse_pos):
+        # Handle hover color for restart button
+        if self.restart_button.collidepoint(mouse_pos):
+            new_color = (100, 100, 255)  # Change color on hover
+        else:
+            new_color = (0, 0, 0)  # Default color
+        if new_color != self.restart_button_color:
+            self.restart_button_color = new_color
+            self.draw_button(self.restart_button, self.restart_button_color, "Restart")
+            pygame.display.update(self.restart_button)  # Update only the restart button area
+
+        # Handle hover color for reset button
+        if self.reset_button.collidepoint(mouse_pos):
+            new_color = (100, 100, 255)  # Change color on hover
+        else:
+            new_color = (0, 0, 0)  # Default color
+        if new_color != self.reset_button_color:
+            self.reset_button_color = new_color
+            self.draw_button(self.reset_button, self.reset_button_color, "Reset")
+            pygame.display.update(self.reset_button)  # Update only the reset button area
+
+        # Handle hover color for submit button
+        if self.submit_button.collidepoint(mouse_pos):
+            new_color = (100, 100, 255)  # Change color on hover
+        else:
+            new_color = (0, 0, 0)  # Default color
+        if new_color != self.submit_button_color:
+            self.submit_button_color = new_color
+            self.draw_button(self.submit_button, self.submit_button_color, "Submit")
+            pygame.display.update(self.submit_button)  # Update only the submit button area
 
     def display_play_time(self):
         play_time = time.time() - self.start_time
