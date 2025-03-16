@@ -118,13 +118,34 @@ class Sudoku:
                     self.window.blit(value, ((j+1)*50 + 15, (i+1)*50))
         pygame.display.update()
 
+    def highlight_same_number(self, selected):
+        if selected:
+            num = abs(self.board[selected[0]][selected[1]])
+            if num != 0:
+                for i in range(9):
+                    for j in range(9):
+                        if abs(self.board[i][j]) == num:
+                            pygame.draw.rect(self.window, HIGHLIGHT_COLOR,  # Light blue background
+                                ((j+1)*50 + BUFFER, (i+1)*50 + BUFFER,
+                                50 - 2*BUFFER, 50 - 2*BUFFER))
+                            # Redraw number if cell is not empty
+                            if self.board[i][j] != 0:
+                                if self.board[i][j] < 0:
+                                    value_color = (255, 0, 0)  # Red for wrong numbers
+                                    value = self.font.render(str(-self.board[i][j]), True, value_color)
+                                else:
+                                    value_color = (52, 31, 151) if self.original_board[i][j] != 0 else (0, 0, 0)
+                                    value = self.font.render(str(self.board[i][j]), True, value_color)
+                                self.window.blit(value, ((j+1)*50 + 15, (i+1)*50))
+                pygame.display.update()
+
     def highlight_cell(self, selected):
         # Clear previous highlights by redrawing background
         self.setup_ui()
         self.update_board_display()
         if selected:
             row, col = selected
-            pygame.draw.rect(self.window, (255, 165, 0),  # Orange border
+            pygame.draw.rect(self.window, (255, 255, 0),  # Yellow border
                 ((col+1)*50 + BUFFER, (row+1)*50 + BUFFER,
                 50 - 2*BUFFER, 50 - 2*BUFFER), 3)
             # Redraw number if cell is not empty
@@ -136,6 +157,7 @@ class Sudoku:
                     value_color = (52, 31, 151) if self.original_board[row][col] != 0 else (0, 0, 0)
                     value = self.font.render(str(self.board[row][col]), True, value_color)
                 self.window.blit(value, ((col+1)*50 + 15, (row+1)*50))
+        self.highlight_same_number(selected)
         pygame.display.update()
 
     def handle_submit(self):
