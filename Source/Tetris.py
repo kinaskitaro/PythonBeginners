@@ -139,7 +139,7 @@ def draw_score_panel():
                       text="Top 10 High Scores:", fill="white", font=("Helvetica", 14, "bold"))
     for index, high_score in enumerate(high_scores):
         canvas.create_text(top_ten_x, (BOARD_HEIGHT * CELL_SIZE // 2) + 50 + (index * 20),
-                          text=f"{index + 1}. {high_score['name']}:     {high_score['score']}", fill="white", font=("Helvetica", 14), anchor="w")
+                          text=f"{index + 1}.{high_score['name']}:     {high_score['score']}", fill="white", font=("Helvetica", 13), anchor="w")
 
     if paused:
         canvas.create_text(BOARD_WIDTH * CELL_SIZE // 2, BOARD_HEIGHT * CELL_SIZE // 2,
