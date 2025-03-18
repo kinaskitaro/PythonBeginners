@@ -2,5 +2,4 @@ numpy
 requests
 python-dotenv
 pillow
-tkinter
 pygame
