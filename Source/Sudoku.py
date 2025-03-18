@@ -42,6 +42,7 @@ class Sudoku:
         self.update_number_counts()  # Update counts based on the initial board
         self.setup_ui()
         self.start_time = time.time()  # Record start time
+        self.puzzle_solved = False  # Add this line to initialize the puzzle_solved attribute
 
     def is_valid(self, num, pos):
         # Check row
@@ -143,6 +144,7 @@ class Sudoku:
         self.board = self.original_board.copy()
         self.update_number_counts()
         self.setup_ui()
+        self.puzzle_solved = False  # Reset puzzle_solved flag
 
     def restart_game(self):
         difficulty = select_difficulty()
@@ -229,12 +231,12 @@ class Sudoku:
             pygame.display.update()
         else:
             self.display_play_time()
+            self.puzzle_solved = True  # Set puzzle_solved to True when the puzzle is solved
         self.update_number_counts()  # Update counts after submission
         self.display_number_counts()  # Display updated counts
 
     def play(self):
         selected = None
-        puzzle_solved = False
         while True:
             mouse_pos = pygame.mouse.get_pos()
             # Handle button hover colors
@@ -250,16 +252,16 @@ class Sudoku:
                         return
                     elif self.reset_button.collidepoint(pos):
                         self.reset_board()
-                    elif self.submit_button.collidepoint(pos) and not puzzle_solved:
+                    elif self.submit_button.collidepoint(pos) and not self.puzzle_solved:
                         self.handle_submit()
                         if not any(self.board[i][j] == 0 or self.board[i][j] < 0 for i in range(9) for j in range(9)):
-                            puzzle_solved = True
-                    elif 50 <= pos[0] <= 500 and 50 <= pos[1] <= 500 and not puzzle_solved:
+                            self.puzzle_solved = True
+                    elif 50 <= pos[0] <= 500 and 50 <= pos[1] <= 500 and not self.puzzle_solved:
                         x = (pos[1] - 50) // 50
                         y = (pos[0] - 50) // 50
                         selected = (x, y)
                         self.highlight_cell(selected)
-                if event.type == pygame.KEYDOWN and selected and not puzzle_solved:
+                if event.type == pygame.KEYDOWN and selected and not self.puzzle_solved:
                     if self.original_board[selected[0]][selected[1]] == 0:  # Only allow input in non-static cells
                         if event.unicode.isdigit() and 1 <= int(event.unicode) <= 9:
                             num = int(event.unicode)
