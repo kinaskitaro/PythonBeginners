@@ -3,15 +3,6 @@ import pygame
 import time  # Add import for time
 import sys
 
-# Suppress Pygame welcome message
-class NullWriter:
-    def write(self, _):
-        pass
-
-null_writer = NullWriter()
-original_stdout = sys.stdout
-sys.stdout = null_writer
-
 # UI Constants
 WIDTH = 770  # Increase width to accommodate the number list
 HEIGHT = 600
@@ -366,7 +357,7 @@ def generate_random_board(difficulty=MEDIUM):
 
 def select_difficulty():
     pygame.init()
-    window = pygame.display.set_mode((WIDTH, WIDTH))
+    window = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Select Difficulty")
     font = pygame.font.SysFont('Comic Sans MS', 35)
     
@@ -407,9 +398,6 @@ def select_difficulty():
                             return MEDIUM
                         elif text == 'HARD':
                             return HARD
-
-# Restore original stdout
-sys.stdout = original_stdout
 
 if __name__ == "__main__":
     difficulty = select_difficulty()
