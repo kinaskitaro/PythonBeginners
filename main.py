@@ -15,7 +15,7 @@ if __name__ == "__main__":
     
     print("Select a Python file to execute:")
     for idx, filename in enumerate(python_files):
-        print(f"{idx + 1}. {filename}")
+        print(f"{idx + 1}. {filename.replace('.py', '')}")
     
     choice = int(input("Enter the number of the file to execute: ")) - 1
     execute_python_file(os.path.join(directory, python_files[choice]))
