@@ -343,15 +343,22 @@ def generate_random_board(difficulty=MEDIUM):
     temp_sudoku = Sudoku(board)
     temp_sudoku.solve()  # Fill the rest of the board
     
-    # Remove numbers based on difficulty
+    # Remove numbers based on difficulty while ensuring a unique solution
     filled_board = temp_sudoku.board.copy()
     cells = [(i, j) for i in range(9) for j in range(9)]
+    random.shuffle(cells)
     for _ in range(difficulty):
         if not cells:
             break
-        row, col = random.choice(cells)
-        cells.remove((row, col))
+        row, col = cells.pop()
+        backup = filled_board[row][col]
         filled_board[row][col] = 0
+
+        # Check if the board still has a unique solution
+        test_sudoku = Sudoku(filled_board)
+        test_sudoku.solve()
+        if not test_sudoku.solve():  # If multiple solutions exist, revert the change
+            filled_board[row][col] = backup
     
     return filled_board.tolist()
 
