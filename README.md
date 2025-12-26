@@ -29,6 +29,7 @@ All projects are located in the `Source/` directory. Here's what you'll find:
 | **Tetris.py** | Tetris game with rotation mechanics | Game physics, piece management |
 | **TicTacToe.py** | Tic-Tac-Toe two-player game | Game state logic, win detection |
 | **Triangle.py** | Triangle calculations and visualizer | Math formulas, geometry |
+| **WordGuess.py** | Wordle-style word guessing game | String manipulation, pattern matching, scoring system |
 | **Weather.py** | Weather information display app | API calls, JSON parsing, UI updates |
 
 ## Prerequisites
@@ -70,6 +71,7 @@ Navigate to the `Source` folder and run any project:
 cd Source
 python 2048.py          # Run the 2048 game
 python Snake.py         # Run the Snake game
+python WordGuess.py     # Run the WordGuess game
 python Calculator.py    # Run the Calculator
 # ... and so on
 ```
@@ -92,6 +94,7 @@ Then follow the on-screen instructions to select and run a project.
 - **Snake** - Classic arcade game with increasing difficulty
 - **Tetris** - Full-featured tetris with rotation and line clearing
 - **TicTacToe** - Two-player game with win/lose detection
+- **WordGuess** - Wordle-style word guessing with multiple categories, scoring, and streak bonuses
 
 ### GUI Applications
 
@@ -116,7 +119,8 @@ Suggested order for beginners:
 2. **DigitalClock/AnalogClock** - Understand time handling
 3. **TicTacToe** - Learn game logic and state management
 4. **2048/Snake** - Advance to more complex game mechanics
-5. **Weather** - Learn API integration
+5. **WordGuess** - Learn string manipulation and pattern matching
+6. **Weather** - Learn API integration
 
 ## Contributing
 
@@ -156,10 +160,10 @@ pip install requests
 
 Future additions:
 - [ ] Memory game
-- [ ] Hangman
 - [ ] Music player
 - [ ] Pomodoro timer
 - [ ] Portfolio website generator
+- [ ] More WordGuess categories and features
 
 ## License
 
