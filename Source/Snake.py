@@ -3,8 +3,14 @@ import time
 import random
 import json
 import os
+import sys
 
-HIGHSCORE_FILE = "snake_highscore.json"
+def get_highscore_path():
+    if getattr(sys, 'frozen', False):
+        return os.path.join(os.path.expanduser("~"), "snake_highscore.json")
+    return "snake_highscore.json"
+
+HIGHSCORE_FILE = get_highscore_path()
 
 class SnakeGame:
     def __init__(self):

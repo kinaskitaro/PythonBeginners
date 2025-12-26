@@ -12,7 +12,11 @@ pygame.init()
 SCREEN_HEIGHT = 600
 SCREEN_WIDTH = 1000
 FPS = 60
-HIGHSCORE_FILE = "dinosaur_highscore.json"
+
+def get_base_dir():
+    if getattr(sys, 'frozen', False):
+        return getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    return os.path.dirname(os.path.abspath(__file__))
 
 # Colors
 WHITE = (255, 255, 255)
@@ -31,8 +35,15 @@ SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("🦖 Dinosaur Runner 🦖")
 
 # Load assets
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = get_base_dir()
 ASSETS_DIR = os.path.join(BASE_DIR, "Assets")
+
+def get_highscore_path():
+    if getattr(sys, 'frozen', False):
+        return os.path.join(os.path.expanduser("~"), "dinosaur_highscore.json")
+    return "dinosaur_highscore.json"
+
+HIGHSCORE_FILE = get_highscore_path()
 
 def load_image(path):
     return pygame.image.load(os.path.join(ASSETS_DIR, path))
