@@ -236,20 +236,31 @@ class WordGuessGame:
         buttons_frame = tk.Frame(right_panel, bg="#1a1a2e")
         buttons_frame.pack(pady=10)
         
-        restart_round_btn = tk.Button(buttons_frame, text="RESTART", font=tkfont.Font(family="Segoe UI", size=11, weight="bold"),
-                                    bg="#ffd700", fg="#1a1a2e", activebackground="#e6c200",
-                                    relief="flat", cursor="hand2", padx=20, pady=8, command=self.restart_round)
-        restart_round_btn.pack(side=tk.LEFT, padx=10)
+        row1_frame = tk.Frame(buttons_frame, bg="#1a1a2e")
+        row1_frame.pack(pady=3)
         
-        new_word_btn = tk.Button(buttons_frame, text="NEW WORD", font=tkfont.Font(family="Segoe UI", size=11, weight="bold"),
-                              bg="#00d4ff", fg="#1a1a2e", activebackground="#00a8cc",
-                              relief="flat", cursor="hand2", padx=20, pady=8, command=self.start_new_round)
-        new_word_btn.pack(side=tk.LEFT, padx=10)
+        row2_frame = tk.Frame(buttons_frame, bg="#1a1a2e")
+        row2_frame.pack(pady=3)
         
-        new_game_btn = tk.Button(buttons_frame, text="NEW GAME", font=tkfont.Font(family="Segoe UI", size=11, weight="bold"),
-                               bg="#ff6b6b", fg="white", activebackground="#e85555",
-                               relief="flat", cursor="hand2", padx=20, pady=8, command=self.restart_game)
-        new_game_btn.pack(side=tk.LEFT, padx=10)
+        help_btn = tk.Button(row1_frame, text="HOW TO PLAY", font=tkfont.Font(family="Segoe UI", size=11, weight="bold"),
+                            bg="#9b59b6", fg="white", activebackground="#8e44ad",
+                            relief="flat", cursor="hand2", padx=20, pady=10, width=12, command=self.show_help)
+        help_btn.pack(side=tk.LEFT, padx=5)
+        
+        new_game_btn = tk.Button(row1_frame, text="NEW GAME", font=tkfont.Font(family="Segoe UI", size=11, weight="bold"),
+                                bg="#ff6b6b", fg="white", activebackground="#e85555",
+                                relief="flat", cursor="hand2", padx=20, pady=10, width=12, command=self.restart_game)
+        new_game_btn.pack(side=tk.LEFT, padx=5)
+        
+        restart_round_btn = tk.Button(row2_frame, text="RESTART", font=tkfont.Font(family="Segoe UI", size=11, weight="bold"),
+                                     bg="#ffd700", fg="#1a1a2e", activebackground="#e6c200",
+                                     relief="flat", cursor="hand2", padx=20, pady=10, width=12, command=self.restart_round)
+        restart_round_btn.pack(side=tk.LEFT, padx=5)
+        
+        new_word_btn = tk.Button(row2_frame, text="NEW WORD", font=tkfont.Font(family="Segoe UI", size=11, weight="bold"),
+                               bg="#00d4ff", fg="#1a1a2e", activebackground="#00a8cc",
+                               relief="flat", cursor="hand2", padx=20, pady=10, width=12, command=self.start_new_round)
+        new_word_btn.pack(side=tk.LEFT, padx=5)
         
         self.master.bind("<Key>", self.on_keypress_event)
 
@@ -274,7 +285,7 @@ class WordGuessGame:
         for letter in self.keyboard:
             self.keyboard[letter].config(bg="#2d2d44")
         
-        self.message_label.config(text="Guess the word!", fg="#888")
+        self.message_label.config(text="Click HOW TO PLAY to learn the rules!", fg="#9b59b6")
         self.hint_label.config(text=f"Hints: {self.max_attempts}")
 
     def restart_round(self):
@@ -289,7 +300,7 @@ class WordGuessGame:
         for letter in self.keyboard:
             self.keyboard[letter].config(bg="#2d2d44")
         
-        self.message_label.config(text="Guess the word!", fg="#888")
+        self.message_label.config(text="Try again! Good luck!", fg="#888")
         self.hint_label.config(text=f"Hints: {self.max_attempts}")
 
     def restart_game(self):
@@ -461,6 +472,88 @@ class WordGuessGame:
         self.score_label.config(text=f"Score: {self.score}")
         self.streak_label.config(text=f"Streak: {self.streak}")
         self.high_score_label.config(text=f"Best: {self.high_score}")
+
+    def show_help(self):
+        help_window = tk.Toplevel(self.master)
+        help_window.title("How to Play")
+        help_window.geometry("650x550")
+        help_window.configure(bg="#1a1a2e")
+        help_window.resizable(False, False)
+        help_window.transient(self.master)
+        help_window.grab_set()
+        
+        help_font = tkfont.Font(family="Segoe UI", size=11)
+        title_font = tkfont.Font(family="Segoe UI", size=16, weight="bold")
+        section_font = tkfont.Font(family="Segoe UI", size=12, weight="bold")
+        
+        help_frame = tk.Frame(help_window, bg="#1a1a2e", padx=25, pady=20)
+        help_frame.pack(fill=tk.BOTH, expand=True)
+        
+        title = tk.Label(help_frame, text="HOW TO PLAY", font=title_font, 
+                        bg="#1a1a2e", fg="#00d4ff")
+        title.pack(pady=(0, 15))
+        
+        intro_text = """Guess the HIDDEN 5-letter word in 6 attempts or less! Each guess must be a valid 5-letter word."""
+        tk.Label(help_frame, text=intro_text, font=help_font, 
+                bg="#1a1a2e", fg="#bdc3c7", wraplength=580, justify="left").pack(pady=(0, 15), anchor="w")
+        
+        tk.Label(help_frame, text="COLOR GUIDE:", font=section_font, 
+                bg="#1a1a2e", fg="#ffd700").pack(anchor="w", pady=(10, 8))
+        
+        color_frame = tk.Frame(help_frame, bg="#1a1a2e")
+        color_frame.pack(fill=tk.X, pady=(0, 15))
+        
+        tk.Label(color_frame, text="●", font=tkfont.Font(family="Segoe UI", size=14, weight="bold"),
+                bg="#1a1a2e", fg="#00ff88").grid(row=0, column=0, sticky="w", padx=(5, 10))
+        tk.Label(color_frame, text="Correct letter in correct position", font=help_font,
+                bg="#1a1a2e", fg="#ecf0f1").grid(row=0, column=1, sticky="w")
+        
+        tk.Label(color_frame, text="●", font=tkfont.Font(family="Segoe UI", size=14, weight="bold"),
+                bg="#1a1a2e", fg="#ffd700").grid(row=1, column=0, sticky="w", padx=(5, 10), pady=(8, 0))
+        tk.Label(color_frame, text="Correct letter, wrong position", font=help_font,
+                bg="#1a1a2e", fg="#ecf0f1").grid(row=1, column=1, sticky="w", pady=(8, 0))
+        
+        tk.Label(color_frame, text="●", font=tkfont.Font(family="Segoe UI", size=14, weight="bold"),
+                bg="#1a1a2e", fg="#3d3d54").grid(row=2, column=0, sticky="w", padx=(5, 10), pady=(8, 0))
+        tk.Label(color_frame, text="Letter not in the word", font=help_font,
+                bg="#1a1a2e", fg="#ecf0f1").grid(row=2, column=1, sticky="w", pady=(8, 0))
+        
+        tk.Label(help_frame, text="CONTROLS:", font=section_font, 
+                bg="#1a1a2e", fg="#ffd700").pack(anchor="w", pady=(10, 8))
+        
+        controls_text = "• Type letters using your keyboard or click the on-screen buttons\n" \
+                       "• Press ENTER or click the row to submit your guess\n" \
+                       "• Press BACKSPACE to delete the last letter\n" \
+                       "• Use NEW WORD to skip to a different word"
+        tk.Label(help_frame, text=controls_text, font=help_font, 
+                bg="#1a1a2e", fg="#bdc3c7", wraplength=580, justify="left").pack(anchor="w", pady=(0, 15))
+        
+        tk.Label(help_frame, text="SCORING:", font=section_font, 
+                bg="#1a1a2e", fg="#ffd700").pack(anchor="w", pady=(10, 8))
+        
+        scoring_text = "• First attempt: +60 points\n" \
+                      "• Second attempt: +50 points\n" \
+                      "• Third attempt: +40 points\n" \
+                      "• Fourth attempt: +30 points\n" \
+                      "• Fifth attempt: +20 points\n" \
+                      "• Sixth attempt: +10 points\n" \
+                      "• Streak bonus: +5 points per consecutive win"
+        tk.Label(help_frame, text=scoring_text, font=help_font, 
+                bg="#1a1a2e", fg="#bdc3c7", wraplength=580, justify="left").pack(anchor="w", pady=(0, 15))
+        
+        tk.Label(help_frame, text="CATEGORIES:", font=section_font, 
+                bg="#1a1a2e", fg="#ffd700").pack(anchor="w", pady=(10, 8))
+        
+        cat_text = "Choose from 8 categories: Animals, Technology, Nature, Sports, " \
+                  "Food, Countries, Colors, and Music"
+        tk.Label(help_frame, text=cat_text, font=help_font, 
+                bg="#1a1a2e", fg="#bdc3c7", wraplength=580, justify="left").pack(anchor="w", pady=(0, 15))
+        
+        close_btn = tk.Button(help_frame, text="GOT IT!", font=tkfont.Font(family="Segoe UI", size=11, weight="bold"),
+                            bg="#00d4ff", fg="#1a1a2e", activebackground="#00a8cc",
+                            relief="flat", cursor="hand2", padx=25, pady=10, 
+                            command=help_window.destroy)
+        close_btn.pack(pady=10)
 
 if __name__ == "__main__":
     root = tk.Tk()
