@@ -15,8 +15,13 @@ FPS = 60
 
 def get_base_dir():
     if getattr(sys, 'frozen', False):
-        return getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
-    return os.path.dirname(os.path.abspath(__file__))
+        base_dir = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+        source_dir = os.path.join(base_dir, 'Source')
+        if os.path.exists(source_dir):
+            return source_dir
+        return base_dir
+    game_dir = os.path.dirname(os.path.abspath(__file__))
+    return game_dir
 
 # Colors
 WHITE = (255, 255, 255)

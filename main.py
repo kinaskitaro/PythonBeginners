@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import subprocess
 
 GAME_ICONS = {
     "2048": "🎯",
@@ -35,26 +36,110 @@ def get_game_title(filepath):
     return None
 
 def run_game_file(filepath):
+    """Run game file using exec() (for direct python main.py <game.py> calls)"""
+    import sys
+    import os
+    import tkinter
+    from tkinter import messagebox
+    
     try:
+        # Get full path to game file
         if getattr(sys, 'frozen', False):
             base_dir = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
-            os.chdir(base_dir)
+            # filepath is absolute, just use it
+            game_path = filepath
+        else:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            game_path = os.path.join(script_dir, filepath)
         
-        exec_globals = {'__name__': '__main__', '__file__': filepath}
-        with open(filepath, 'r', encoding='utf-8') as f:
-            exec(f.read(), exec_globals)
+        # Set current directory to directory containing the game file
+        # This ensures relative paths work (like Assets folder)
+        game_dir = os.path.dirname(os.path.abspath(game_path))
+        os.chdir(game_dir)
+        
+        print(f"Running game: {game_path}")
+        print(f"Working directory: {game_dir}")
+        
+        # Read and execute game file
+        with open(game_path, 'r', encoding='utf-8') as f:
+            code = f.read()
+        
+        # Don't pre-import tkinter modules in exec_globals
+        # Let the game import what it needs normally
+        exec_globals = {"__name__": "__main__"}
+        exec(code, exec_globals)
     except Exception as e:
-        print(f"Error running {filepath}: {e}")
+        error_msg = f"Error running {os.path.basename(filepath)}:\n{str(e)}\n\nThis game may not be fully compatible with the launcher."
+        print(error_msg)
         import traceback
         traceback.print_exc()
+        # Show error in popup if tkinter is available
+        try:
+            root = tkinter.Tk()
+            root.withdraw()
+            messagebox.showerror("Game Error", error_msg)
+        except:
+            pass
+
+def launch_game_subprocess(filepath):
+    """Launch game in subprocess while keeping launcher open"""
+    import subprocess
+    import sys
+    import os
+    
+    try:
+        if getattr(sys, 'frozen', False):
+            # Frozen executable - launch new exe instance
+            exe_path = sys.executable
+            exe_dir = os.path.dirname(exe_path)
+            internal_dir = os.path.join(exe_dir, '_internal')
+            
+            # Get absolute game path
+            if not os.path.isabs(filepath):
+                # filepath is just filename, find it in Source/
+                game_file = os.path.basename(filepath)
+                source_dir = os.path.join(internal_dir, 'Source')
+                game_path = os.path.join(source_dir, game_file)
+            else:
+                game_path = filepath
+            
+            # Launch new exe instance with game file argument
+            # Use CREATE_NEW_CONSOLE so game shows errors
+            subprocess.Popen([exe_path, game_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        else:
+            # Development mode - try to use venv Python if available
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            venv_python = os.path.join(script_dir, ".venv", "Scripts", "python.exe")
+            if os.path.exists(venv_python):
+                python = venv_python
+            else:
+                python = sys.executable
+            # Get absolute path to game file
+            if not os.path.isabs(filepath):
+                filepath = os.path.join(script_dir, filepath)
+            game_dir = os.path.dirname(filepath)
+            # Pass the current environment to subprocess
+            subprocess.Popen([python, filepath], cwd=game_dir, env=os.environ.copy())
+        return True
+    except Exception as e:
+        print(f"Error launching game subprocess: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 if __name__ == "__main__":
+    # Check if we should run a game directly (from command line)
     if len(sys.argv) > 1 and sys.argv[1].endswith('.py'):
-        run_game_file(sys.argv[1])
+        filepath = sys.argv[1]
+        # Resolve filepath relative to current directory
+        if not os.path.isabs(filepath):
+            filepath = os.path.abspath(filepath)
+        # Execute game directly (not via subprocess to avoid infinite loop)
+        run_game_file(filepath)
+        sys.exit(0)
     else:
         import tkinter as tk
         from tkinter import ttk, messagebox, font as tkfont
-        import subprocess
 
         COLORS = {
             "background": "#1a1a2e",
@@ -76,10 +161,10 @@ if __name__ == "__main__":
                 
                 if getattr(sys, 'frozen', False):
                     self.base_dir = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+                    self.source_dir = os.path.join(self.base_dir, "Source")
                 else:
                     self.base_dir = os.path.dirname(os.path.abspath(__file__))
-                
-                self.source_dir = os.path.join(self.base_dir, "Source")
+                    self.source_dir = os.path.join(self.base_dir, "Source")
                 self.python_files = self.get_python_files()
                 
                 self.setup_ui()
@@ -160,28 +245,68 @@ if __name__ == "__main__":
                     game_title = get_game_title(filepath) or game_name.title()
                     icon = GAME_ICONS.get(game_name, "🎮")
                     
+                    # Outer frame for styling
                     card_frame = tk.Frame(grid_container, bg=COLORS["card"], 
-                                        relief="raised", bd=3, width=230, height=145,
+                                        relief="raised", bd=4, width=240, height=155,
                                         cursor="hand2")
                     card_frame.pack_propagate(False)
                     card_frame.grid(row=row, column=col, padx=12, pady=12, sticky="nsew")
                     
-                    header = tk.Frame(card_frame, bg=COLORS["card"])
-                    header.pack(fill="x", pady=(12, 5))
+                    # Content frame
+                    content_frame = tk.Frame(card_frame, bg=COLORS["card"])
+                    content_frame.pack(fill="both", expand=True, padx=10, pady=10)
                     
-                    tk.Label(header, text=icon, 
-                            font=tkfont.Font(family="Segoe UI Emoji", size=28),
-                            bg=COLORS["card"], fg="#f39c12").pack()
+                    # Icon
+                    icon_label = tk.Label(content_frame, text=icon,
+                            font=tkfont.Font(family="Segoe UI Emoji", size=36),
+                            bg=COLORS["card"], fg="#f39c12")
+                    icon_label.pack(pady=(8, 5))
                     
-                    tk.Label(card_frame, text=game_title, 
-                            font=title_font, bg=COLORS["card"], 
-                            fg=COLORS["text"], wraplength=210).pack(pady=(6, 4))
+                    # Title
+                    title_label = tk.Label(content_frame, text=game_title,
+                            font=title_font, bg=COLORS["card"],
+                            fg=COLORS["text"], wraplength=220)
+                    title_label.pack(pady=5)
                     
-                    tk.Label(card_frame, text=f"📁 {filename}", 
-                            font=desc_font, bg=COLORS["card"], 
-                            fg=COLORS["secondary"]).pack(pady=(0, 8))
+                    # Filename
+                    file_label = tk.Label(content_frame, text=f"📁 {filename}",
+                            font=desc_font, bg=COLORS["card"],
+                            fg=COLORS["secondary"])
+                    file_label.pack(pady=(5, 8))
                     
-                    card_frame.bind("<Button-1>", lambda e, fn=filename: self.run_python_file(fn))
+                    # Create event handlers with proper closure to capture widget references
+                    def create_handlers(cf, icf, ico, ttl, fl, fn):
+                        def on_enter(e):
+                            cf.config(bg=COLORS["card_hover"], bd=5, relief="raised")
+                            icf.config(bg=COLORS["card_hover"])
+                            ico.config(bg=COLORS["card_hover"])
+                            ttl.config(bg=COLORS["card_hover"])
+                            fl.config(bg=COLORS["card_hover"])
+                        
+                        def on_leave(e):
+                            cf.config(bg=COLORS["card"], bd=4, relief="raised")
+                            icf.config(bg=COLORS["card"])
+                            ico.config(bg=COLORS["card"])
+                            ttl.config(bg=COLORS["card"])
+                            fl.config(bg=COLORS["card"])
+                        
+                        def on_click(e):
+                            cf.config(bd=3, relief="sunken")
+                            self.root.after(100, lambda: cf.config(bd=5, relief="raised"))
+                            self.root.after(150, lambda: self.run_python_file(fn))
+                        
+                        return on_enter, on_leave, on_click
+                    
+                    # Create handlers with captured widget references
+                    on_enter, on_leave, on_click = create_handlers(
+                        card_frame, content_frame, icon_label, title_label, file_label, filename
+                    )
+                    
+                    # Bind to all widgets
+                    for widget in [card_frame, content_frame, icon_label, title_label, file_label]:
+                        widget.bind("<Enter>", on_enter)
+                        widget.bind("<Leave>", on_leave)
+                        widget.bind("<Button-1>", on_click)
                 
                 for col in range(cols):
                     grid_container.grid_columnconfigure(col, weight=1)
@@ -194,11 +319,17 @@ if __name__ == "__main__":
                 try:
                     result = messagebox.askyesno(
                         "🎮 Launch Game",
-                        f"Ready to play: {game_title}?\n\n📁 File: {filename}",
+                        f"Ready to play: {game_title}?\n\n📁 File: {filename}\n\nGame will open in new window.",
                         icon="question"
                     )
                     if result:
-                        subprocess.Popen(f'"{sys.executable}" "{filepath}"', shell=True)
+                        # Launch game in subprocess (keeps launcher open)
+                        success = launch_game_subprocess(filepath)
+                        if not success:
+                            messagebox.showerror(
+                                "❌ Error",
+                                f"Failed to launch {filename}"
+                            )
                 except Exception as e:
                     messagebox.showerror(
                         "❌ Error",
