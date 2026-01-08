@@ -15,22 +15,22 @@ Welcome to PythonBeginners! This repository contains a diverse collection of Pyt
 
 All projects are located in the `Source/` directory. Here's what you'll find:
 
-| Project | Description | Skills Learned |
-|---------|-------------|----------------|
-| **2048.py** | Classic 2048 puzzle game with GUI | GUI (tkinter), game logic, state management |
-| **AnalogClock.py** | Analog clock display with moving hands | Graphics, time handling, animations |
-| **Calculator.py** | Basic calculator with arithmetic operations | GUI design, event handling |
-| **Converter.py** | Unit converter for various measurements | Data conversion, user input handling |
-| **DigitalClock.py** | Digital clock with date display | Time formatting, real-time updates |
-| **Dinosaur.py** | Chrome-style dinosaur runner game | Sprite animation, collision detection |
-| **LanguageTrans.py** | Language translation application | API integration, GUI |
-| **Snake.py** | Classic snake game | Game loops, coordinate management |
-| **Sudoku.py** | Sudoku puzzle solver and game | Backtracking algorithm, grid manipulation |
-| **Tetris.py** | Tetris game with rotation mechanics | Game physics, piece management |
-| **TicTacToe.py** | Tic-Tac-Toe two-player game | Game state logic, win detection |
-| **Triangle.py** | Triangle calculations and visualizer | Math formulas, geometry |
-| **WordGuess.py** | Wordle-style word guessing game | String manipulation, pattern matching, scoring system |
-| **Weather.py** | Weather information display app | API calls, JSON parsing, UI updates |
+| Project              | Description                                 | Skills Learned                                        |
+| -------------------- | ------------------------------------------- | ----------------------------------------------------- |
+| **2048.py**          | Classic 2048 puzzle game with GUI           | GUI (tkinter), game logic, state management           |
+| **AnalogClock.py**   | Analog clock display with moving hands      | Graphics, time handling, animations                   |
+| **Calculator.py**    | Basic calculator with arithmetic operations | GUI design, event handling                            |
+| **Converter.py**     | Unit converter for various measurements     | Data conversion, user input handling                  |
+| **DigitalClock.py**  | Digital clock with date display             | Time formatting, real-time updates                    |
+| **Dinosaur.py**      | Chrome-style dinosaur runner game           | Sprite animation, collision detection                 |
+| **LanguageTrans.py** | Language translation application            | API integration, GUI                                  |
+| **Snake.py**         | Classic snake game                          | Game loops, coordinate management                     |
+| **Sudoku.py**        | Sudoku puzzle solver and game               | Backtracking algorithm, grid manipulation             |
+| **Tetris.py**        | Tetris game with rotation mechanics         | Game physics, piece management                        |
+| **TicTacToe.py**     | Tic-Tac-Toe two-player game                 | Game state logic, win detection                       |
+| **Triangle.py**      | Triangle calculations and visualizer        | Math formulas, geometry                               |
+| **WordGuess.py**     | Wordle-style word guessing game             | String manipulation, pattern matching, scoring system |
+| **Weather.py**       | Weather information display app             | API calls, JSON parsing, UI updates                   |
 
 ## Prerequisites
 
@@ -42,12 +42,14 @@ Before you begin, ensure you have the following:
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/your-username/PythonBeginners.git
    cd PythonBeginners
    ```
 
 2. (Optional) Create a virtual environment:
+
    ```bash
    python -m venv venv
    # On Windows:
@@ -152,6 +154,7 @@ If you encounter import errors for `tkinter`:
 ### Dependencies
 
 Missing packages? Install them:
+
 ```bash
 pip install requests
 ```
@@ -159,7 +162,8 @@ pip install requests
 ## Roadmap
 
 Future additions:
-- [ ] Memory game
+
+- [v] Memory game
 - [ ] Music player
 - [ ] Pomodoro timer
 - [ ] Portfolio website generator

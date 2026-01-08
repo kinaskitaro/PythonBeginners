@@ -51,7 +51,7 @@ class SnakeGame:
 
     def setup_screen(self):
         self.wn = turtle.Screen()
-        self.wn.title('🐍 Snake Game - Ultimate Edition 🐍')
+        self.wn.title('🐍 Snake Game 🐍')
         self.wn.bgcolor('#0d1117')
         self.wn.setup(width=700, height=700)
         self.wn.tracer(0)

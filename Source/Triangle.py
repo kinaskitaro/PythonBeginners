@@ -4,7 +4,7 @@ from tkinter import ttk, font as tkfont
 class TriangleGenerator:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Triangle Pattern Generator")
+        self.root.title("Triangle Pattern")
         self.root.geometry("800x700")
         self.root.configure(bg="#1E1E2E")
         
