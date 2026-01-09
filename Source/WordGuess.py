@@ -4,6 +4,7 @@ import random
 import json
 import os
 from tkinter import font as tkfont
+from Highscore import HighscoreManager
 
 class WordGuessGame:
     def __init__(self, master):
@@ -12,8 +13,6 @@ class WordGuessGame:
         self.master.geometry("950x700")
         self.master.resizable(False, False)
         self.master.configure(bg="#1a1a2e")
-        
-        self.HIGHSCORE_FILE = "wordguess_highscore.json"
         
         self.categories = {
             "Animals": {
@@ -89,7 +88,8 @@ class WordGuessGame:
         self.max_attempts = 6
         self.score = 0
         self.streak = 0
-        self.high_score = self.load_highscore()
+        self.highscore_manager = HighscoreManager("WordGuess")
+        self.high_score = self.highscore_manager.get_highscore()
         self.game_over = False
         
         for category in self.categories:
@@ -98,22 +98,7 @@ class WordGuessGame:
         self.create_widgets()
         self.start_new_round()
 
-    def load_highscore(self):
-        if os.path.exists(self.HIGHSCORE_FILE):
-            try:
-                with open(self.HIGHSCORE_FILE, 'r') as f:
-                    data = json.load(f)
-                    return data.get('highscore', 0)
-            except (json.JSONDecodeError, IOError):
-                pass
-        return 0
 
-    def save_highscore(self):
-        try:
-            with open(self.HIGHSCORE_FILE, 'w') as f:
-                json.dump({'highscore': self.high_score}, f)
-        except IOError:
-            pass
 
     def create_widgets(self):
         title_font = tkfont.Font(family="Segoe UI", size=32, weight="bold")
@@ -447,7 +432,7 @@ class WordGuessGame:
         
         if self.score > self.high_score:
             self.high_score = self.score
-            self.save_highscore()
+            self.highscore_manager.save_highscore(self.high_score)
         
         self.update_score_display()
         

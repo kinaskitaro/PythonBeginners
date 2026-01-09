@@ -4,6 +4,7 @@ import random
 import sys
 import json
 import math
+from Highscore import HighscoreManager
 
 # Initialize the game
 pygame.init()
@@ -42,13 +43,6 @@ pygame.display.set_caption("🦖 Dinosaur Runner 🦖")
 # Load assets
 BASE_DIR = get_base_dir()
 ASSETS_DIR = os.path.join(BASE_DIR, "Assets")
-
-def get_highscore_path():
-    if getattr(sys, 'frozen', False):
-        return os.path.join(os.path.expanduser("~"), "dinosaur_highscore.json")
-    return "dinosaur_highscore.json"
-
-HIGHSCORE_FILE = get_highscore_path()
 
 def load_image(path):
     return pygame.image.load(os.path.join(ASSETS_DIR, path))
@@ -247,7 +241,6 @@ class Game:
         self.x_pos_bg = 0
         self.y_pos_bg = 380
         self.points = 0
-        self.high_score = self.load_highscore()
         self.obstacles = []
         self.death_count = 0
         self.paused = False
@@ -258,29 +251,17 @@ class Game:
         self.screen_shake = 0
         self.day_night_cycle = 0
         self.score_animation = 0
-        self.combo = 0
-        self.last_obstacle_pass_time = 0
+        self.highscore_manager = HighscoreManager("Dinosaur")
+        self.high_score = self.highscore_manager.get_highscore()
 
-    def load_highscore(self):
-        if os.path.exists(HIGHSCORE_FILE):
-            try:
-                with open(HIGHSCORE_FILE, 'r') as f:
-                    data = json.load(f)
-                    return data.get('highscore', 0)
-            except:
-                return 0
-        return 0
 
-    def save_highscore(self):
-        with open(HIGHSCORE_FILE, 'w') as f:
-            json.dump({'highscore': self.high_score}, f)
 
     def update_score(self):
         if self.points % 100 == 0 and self.points != 0:
             self.game_speed += 0.5
         if self.points > self.high_score:
             self.high_score = self.points
-            self.save_highscore()
+            self.highscore_manager.save_highscore(self.high_score)
 
     def create_particles(self, x, y, color, count=10):
         for _ in range(count):
@@ -293,12 +274,6 @@ class Game:
         text_rect = text.get_rect()
         text_rect.center = (500, 40 - score_offset)
         SCREEN.blit(text, text_rect)
-        
-        if self.combo > 1:
-            combo_text = self.font.render(f"Combo x{self.combo}!", True, PURPLE)
-            combo_rect = combo_text.get_rect()
-            combo_rect.center = (500, 70)
-            SCREEN.blit(combo_text, combo_rect)
         
         if self.score_animation > 0:
             self.score_animation -= 1
@@ -342,18 +317,9 @@ class Game:
                 self.points = 0
                 self.game_speed = 8
                 self.obstacles.clear()
-                self.combo = 0
                 return
             elif obstacle.rect.right < self.player.dino_rect.left:
-                current_time = pygame.time.get_ticks()
-                if current_time - self.last_obstacle_pass_time < 3000:
-                    self.combo += 1
-                else:
-                    self.combo = 1
-                self.last_obstacle_pass_time = current_time
-                
-                score_gain = 1 * self.combo
-                self.points += score_gain
+                self.points += 1
                 self.score_animation = 10
                 self.create_particles(obstacle.rect.right, obstacle.rect.centery, GREEN, 5)
                 self.obstacles.remove(obstacle)

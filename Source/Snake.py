@@ -4,13 +4,7 @@ import random
 import json
 import os
 import sys
-
-def get_highscore_path():
-    if getattr(sys, 'frozen', False):
-        return os.path.join(os.path.expanduser("~"), "snake_highscore.json")
-    return "snake_highscore.json"
-
-HIGHSCORE_FILE = get_highscore_path()
+from Highscore import HighscoreManager
 
 class SnakeGame:
     def __init__(self):
@@ -23,7 +17,8 @@ class SnakeGame:
         self.delay = 0.1
         self.score = 0
         self.level = 1
-        self.high_score = self.load_highscore()
+        self.highscore_manager = HighscoreManager("Snake")
+        self.high_score = self.highscore_manager.get_highscore()
         self.game_started = False
         self.game_paused = False
         self.game_over = False
@@ -35,20 +30,6 @@ class SnakeGame:
         self.setup_bindings()
         self.show_start_screen()
         
-    def load_highscore(self):
-        if os.path.exists(HIGHSCORE_FILE):
-            try:
-                with open(HIGHSCORE_FILE, 'r') as f:
-                    data = json.load(f)
-                    return data.get('highscore', 0)
-            except:
-                return 0
-        return 0
-
-    def save_highscore(self):
-        with open(HIGHSCORE_FILE, 'w') as f:
-            json.dump({'highscore': self.high_score}, f)
-
     def setup_screen(self):
         self.wn = turtle.Screen()
         self.wn.title('🐍 Snake Game 🐍')
@@ -293,7 +274,7 @@ class SnakeGame:
     def update_highscore(self):
         if self.score > self.high_score:
             self.high_score = self.score
-            self.save_highscore()
+            self.highscore_manager.save_highscore(self.high_score)
 
     def update_level(self):
         new_level = self.score // 50 + 1

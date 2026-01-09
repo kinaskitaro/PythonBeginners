@@ -3,8 +3,7 @@ from tkinter import messagebox
 import random
 import json
 import os
-
-HIGHSCORE_FILE = "2048_highscore.json"
+from Highscore import HighscoreManager
 
 class Game2048:
     def __init__(self, master):
@@ -14,9 +13,10 @@ class Game2048:
         self.master.resizable(False, False)
         self.master.configure(bg="#faf8ef")
         
+        self.highscore_manager = HighscoreManager("2048")
         self.grid = [[0] * 4 for _ in range(4)]
         self.score = 0
-        self.highscore = self.load_highscore()
+        self.highscore = self.highscore_manager.get_highscore()
         self.is_game_over = False
         self.has_won = False
         self.game_over_widgets = []
@@ -24,23 +24,6 @@ class Game2048:
         self.create_widgets()
         self.start_game()
     
-    def load_highscore(self):
-        if os.path.exists(HIGHSCORE_FILE):
-            try:
-                with open(HIGHSCORE_FILE, 'r') as f:
-                    data = json.load(f)
-                    return data.get('highscore', 0)
-            except (json.JSONDecodeError, IOError):
-                pass
-        return 0
-    
-    def save_highscore(self):
-        try:
-            with open(HIGHSCORE_FILE, 'w') as f:
-                json.dump({'highscore': self.highscore}, f)
-        except IOError:
-            pass
-
     def create_widgets(self):
         header_frame = tk.Frame(self.master, bg="#faf8ef")
         header_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=8)
@@ -204,7 +187,7 @@ class Game2048:
         if moved:
             if self.score > self.highscore:
                 self.highscore = self.score
-                self.save_highscore()
+                self.highscore_manager.save_highscore(self.highscore)
         
         return moved
 

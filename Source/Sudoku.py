@@ -11,25 +11,25 @@ HEIGHT = 650
 BOARD_SIZE = 540
 CELL_SIZE = 60
 OFFSET_X = 20
-OFFSET_Y = 70
+OFFSET_Y = 55
 
-# Colors - Modern dark theme
-BG_COLOR = (30, 30, 40)
-BOARD_BG = (45, 45, 60)
-GRID_LIGHT = (70, 70, 90)
-GRID_THICK = (100, 100, 120)
-HIGHLIGHT_COLOR = (79, 172, 254, 100)
-SAME_NUM_COLOR = (79, 172, 254, 50)
-SELECTED_COLOR = (255, 215, 0, 150)
-CORRECT_COLOR = (46, 204, 113)
-WRONG_COLOR = (231, 76, 60)
-ORIGINAL_NUM_COLOR = (255, 255, 255)
-INPUT_NUM_COLOR = (52, 152, 219)
-BUTTON_NORMAL = (52, 73, 94)
-BUTTON_HOVER = (79, 172, 254)
-BUTTON_CLICK = (41, 128, 185)
-TEXT_COLOR = (236, 240, 241)
-ACCENT_COLOR = (155, 89, 182)
+# Colors - Modern vibrant theme
+BG_COLOR = (240, 248, 255)
+BOARD_BG = (255, 255, 255)
+GRID_LIGHT = (200, 210, 230)
+GRID_THICK = (70, 130, 180)
+HIGHLIGHT_COLOR = (100, 180, 255, 80)
+SAME_NUM_COLOR = (100, 180, 255, 40)
+SELECTED_COLOR = (255, 200, 100, 180)
+CORRECT_COLOR = (34, 197, 94)
+WRONG_COLOR = (239, 68, 68)
+ORIGINAL_NUM_COLOR = (30, 41, 59)
+INPUT_NUM_COLOR = (59, 130, 246)
+BUTTON_NORMAL = (99, 102, 241)
+BUTTON_HOVER = (139, 92, 246)
+BUTTON_CLICK = (67, 56, 202)
+TEXT_COLOR = (30, 41, 59)
+ACCENT_COLOR = (236, 72, 153)
 
 # Difficulty Levels
 EASY = 30
@@ -37,9 +37,10 @@ MEDIUM = 45
 HARD = 60
 
 class Sudoku:
-    def __init__(self, board):
+    def __init__(self, board, difficulty=MEDIUM):
         self.board = np.array(board)
         self.original_board = self.board.copy()
+        self.difficulty = difficulty
         
         # Initialize pygame once
         if not pygame.font.get_init():
@@ -79,7 +80,6 @@ class Sudoku:
         
         # Game state
         self.puzzle_solved = False
-        self.difficulty = MEDIUM
         self.show_mistakes = False
         
         # Particles for celebration
@@ -295,20 +295,60 @@ class Sudoku:
     
     def draw_number_panel(self):
         panel_y = 615
+        panel_height = 35
+        num_width = 60
+        
         for num in range(1, 10):
             count = self.number_counts[num]
-            color = TEXT_COLOR if count > 0 else (80, 80, 100)
             
-            text = self.font_small.render(f"{num}: {count}", True, color)
-            self.window.blit(text, (OFFSET_X + (num - 1) * 55, panel_y))
+            # Calculate position
+            x = OFFSET_X + (num - 1) * num_width
+            y = panel_y
+            
+            # Circle radius
+            radius = 18
+            center_x = x + num_width // 2
+            center_y = y + panel_height // 2 - 2
+            
+            # Draw circle background
+            bg_color = (52, 152, 219, 80) if count > 0 else (80, 80, 100, 80)
+            s = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
+            pygame.draw.circle(s, bg_color, (radius, radius), radius)
+            self.window.blit(s, (center_x - radius, center_y - radius))
+            
+            # Draw circle border
+            border_color = INPUT_NUM_COLOR if count > 0 else (80, 80, 100)
+            pygame.draw.circle(self.window, border_color, (center_x, center_y), radius, 2)
+            
+            # Draw number inside circle
+            text = self.font_medium.render(str(num), True, TEXT_COLOR if count > 0 else (80, 80, 100))
+            text_rect = text.get_rect(center=(center_x, center_y))
+            self.window.blit(text, text_rect)
+            
+            # Draw count badge in top-right corner of circle
+            badge_radius = 10
+            badge_x = center_x + radius - 2
+            badge_y = center_y - radius + 2
+            
+            # Badge background
+            badge_bg = (231, 76, 60) if count <= 2 else (46, 204, 113) if count <= 4 else (52, 152, 219)
+            pygame.draw.circle(self.window, badge_bg, (badge_x, badge_y), badge_radius)
+            
+            # Badge border
+            pygame.draw.circle(self.window, (255, 255, 255), (badge_x, badge_y), badge_radius, 1)
+            
+            # Count text
+            count_text = self.font_small.render(str(count), True, (255, 255, 255))
+            count_rect = count_text.get_rect(center=(badge_x, badge_y))
+            self.window.blit(count_text, count_rect)
     
     def draw_board(self):
         self.window.fill(BG_COLOR)
+        self.draw_number_panel()
         self.draw_grid()
         self.draw_highlight()
         self.draw_numbers()
         self.draw_side_panel()
-        self.draw_number_panel()
         pygame.display.flip()
     
     def get_cell_from_pos(self, pos: Tuple[int, int]) -> Optional[Tuple[int, int]]:
@@ -442,7 +482,7 @@ class Sudoku:
     def restart(self):
         difficulty = self.difficulty
         board = generate_random_board(difficulty)
-        self.__init__(board)
+        self.__init__(board, difficulty)
         return self.play()
     
     def play(self):
@@ -571,7 +611,7 @@ if __name__ == "__main__":
         if difficulty is None:
             break
         board = generate_random_board(difficulty)
-        game = Sudoku(board)
+        game = Sudoku(board, difficulty)
         to_menu = game.play()
         if to_menu:
             continue  # Go back to difficulty selection

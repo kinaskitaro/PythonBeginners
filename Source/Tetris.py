@@ -4,6 +4,7 @@ import random
 import json
 import os
 from typing import List, Optional
+from Highscore import HighscoreManager
 
 class TetrisGame:
     def __init__(self):
@@ -17,7 +18,7 @@ class TetrisGame:
         self.BOARD_WIDTH = 10
         self.BOARD_HEIGHT = 20
         self.CELL_SIZE = 28
-        self.HIGH_SCORES_FILE = "tetris_high_scores.json"
+        self.highscore_manager = HighscoreManager("Tetris")
         
         # Colors for different pieces
         self.PIECE_COLORS = {
@@ -37,7 +38,7 @@ class TetrisGame:
             'T': [[0, 1, 0], [1, 1, 1]],
             'S': [[0, 1, 1], [1, 1, 0]],
             'Z': [[1, 1, 0], [0, 1, 1]],
-            'L': [[1, 1, 1], [1, 0, 0]],
+            'L': [[0, 0, 1], [1, 1, 1]],
             'J': [[1, 1, 1], [0, 0, 1]]
         }
         
@@ -64,17 +65,10 @@ class TetrisGame:
         self.draw_initial_state()
         
     def load_high_scores(self):
-        if os.path.exists(self.HIGH_SCORES_FILE):
-            try:
-                with open(self.HIGH_SCORES_FILE, 'r') as f:
-                    return json.load(f)
-            except:
-                return []
-        return []
+        return self.highscore_manager.load_highscores()
     
     def save_high_scores(self):
-        with open(self.HIGH_SCORES_FILE, 'w') as f:
-            json.dump(self.high_scores, f)
+        self.highscore_manager.save_highscores(self.high_scores)
     
     def create_ui(self):
         title_font = tkfont.Font(family="Segoe UI", size=28, weight="bold")
@@ -305,17 +299,6 @@ class TetrisGame:
             outline="",
             tags="cell"
         )
-        # Add highlight effect
-        self.canvas.create_rectangle(
-            x * self.CELL_SIZE + 2,
-            y * self.CELL_SIZE + 2,
-            (x + 1) * self.CELL_SIZE - 2,
-            y * self.CELL_SIZE + 8,
-            fill="",
-            outline="#ffffff",
-            width=1,
-            tags="cell"
-        )
     
     def draw_current_piece(self):
         if not self.current_piece:
@@ -350,17 +333,13 @@ class TetrisGame:
                         fill=self.next_piece_color,
                         outline=""
                     )
-                    self.next_canvas.create_rectangle(
-                        px + 1, py + 1, px + cell_size - 3, py + 6,
-                        fill="",
-                        outline="#ffffff",
-                        width=1
-                    )
     
     def update_display(self):
+        if self.game_over:
+            return
         self.canvas.delete("cell")
         self.draw_board()
-        if not self.game_over and self.current_piece:
+        if self.current_piece:
             self.draw_current_piece()
         
         if self.paused:
@@ -420,7 +399,6 @@ class TetrisGame:
             return
         
         while self.move_piece(0, 1):
-            self.score += 2
             self.update_score_display()
     
     def lock_piece(self):
@@ -440,23 +418,25 @@ class TetrisGame:
         self.update_display()
     
     def clear_lines(self):
-        lines_to_clear = []
+        new_board = []
         
         for y in range(self.BOARD_HEIGHT):
-            if all(self.board[y]):
-                lines_to_clear.append(y)
+            if not all(self.board[y]):
+                new_board.append(self.board[y][:])
         
-        for y in sorted(lines_to_clear, reverse=True):
-            del self.board[y]
-            self.board.insert(0, [None for _ in range(self.BOARD_WIDTH)])
+        lines_cleared = self.BOARD_HEIGHT - len(new_board)
         
-        if lines_to_clear:
-            lines_count = len(lines_to_clear)
-            self.lines_cleared += lines_count
+        while len(new_board) < self.BOARD_HEIGHT:
+            new_board.insert(0, [None for _ in range(self.BOARD_WIDTH)])
+        
+        self.board = new_board
+        
+        if lines_cleared > 0:
+            self.lines_cleared += lines_cleared
             
-            # Scoring: 100, 300, 500, 800 points for 1, 2, 3, 4 lines
-            points = [0, 100, 300, 500, 800]
-            self.score += points[lines_count] * self.level
+            # Scoring: 1, 3, 5, 8 points for 1, 2, 3, 4 lines
+            points = [0, 1, 3, 5, 8]
+            self.score += points[lines_cleared] * self.level
             
             # Level up every 10 lines
             self.level = self.lines_cleared // 10 + 1
@@ -480,6 +460,8 @@ class TetrisGame:
         self.root.after(drop_speed, self.auto_drop)
     
     def start_game(self):
+        self.canvas.delete("all")
+        self.draw_grid()
         self.board = [[None for _ in range(self.BOARD_WIDTH)] for _ in range(self.BOARD_HEIGHT)]
         self.score = 0
         self.lines_cleared = 0
@@ -496,9 +478,7 @@ class TetrisGame:
         self.auto_drop()
     
     def show_game_over(self):
-        self.update_display()
-        
-        overlay = tk.Frame(self.root, bg="rgba(0,0,0,0.8)")
+        self.canvas.delete("all")
         
         self.canvas.create_text(
             (self.BOARD_WIDTH * self.CELL_SIZE) // 2,
@@ -544,8 +524,6 @@ class TetrisGame:
             self.move_piece(1, 0)
         elif event.keysym == 'Down':
             self.move_piece(0, 1)
-            self.score += 1
-            self.update_score_display()
         elif event.keysym == 'Up':
             self.rotate_piece()
         elif event.keysym == 'space':
