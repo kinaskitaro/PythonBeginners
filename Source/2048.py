@@ -12,6 +12,7 @@ class Game2048:
         self.master.geometry("600x700")
         self.master.resizable(False, False)
         self.master.configure(bg="#faf8ef")
+        aaa
         
         self.highscore_manager = HighscoreManager("2048")
         self.grid = [[0] * 4 for _ in range(4)]
